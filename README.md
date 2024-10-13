@@ -1,6 +1,7 @@
 # golang-expression-evaluator
 
 
+```bash
 1 + 2 * (3 + 4) / 5 + 6
 [
 	{value: "1", type: number}
@@ -30,3 +31,4 @@
 └── R 6
 
 result = 9.800000
+```
