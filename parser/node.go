@@ -7,9 +7,14 @@ import (
 )
 
 type Node struct {
-	Value *tokenizer.Token
-	Left  *Node
-	Right *Node
+	Value    *tokenizer.Token
+	Left     *Node
+	Right    *Node
+	Priority int
+}
+
+func (n *Node) IsFilled() bool {
+	return n.Value.Type != tokenizer.TypeOperation || (n.Left != nil && n.Right != nil)
 }
 
 func (n *Node) String() string {

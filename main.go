@@ -3,11 +3,14 @@ package main
 import (
 	"expression_parser/parser"
 	"expression_parser/tokenizer"
+	"expression_parser/virtual_machine"
 	"fmt"
 )
 
 func main() {
-	var expression string = "3 * (222 + 1)"
+	var expression string = "1 + 2 * (3 + 4) / 5 + 6"
+
+	fmt.Println(expression)
 
 	var tokenizerMachine *tokenizer.Tokenizer = &tokenizer.Tokenizer{}
 
@@ -20,9 +23,9 @@ func main() {
 	}
 	fmt.Println(tokenStream)
 
-	pars := parser.NewFromStream(tokenStream)
+	parseMachine := parser.NewFromStream(tokenStream)
 
-	tree, err := pars.Parse()
+	tree, err := parseMachine.Parse()
 
 	if err != nil {
 		fmt.Println(err)
@@ -31,4 +34,14 @@ func main() {
 	}
 
 	fmt.Println(tree)
+
+	result, err := virtual_machine.Invoke(tree)
+
+	if err != nil {
+		fmt.Println(err)
+
+		return
+	}
+
+	fmt.Printf("result = %f", result)
 }

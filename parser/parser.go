@@ -2,9 +2,11 @@ package parser
 
 import (
 	"expression_parser/tokenizer"
-	"expression_parser/utility"
 	"fmt"
+	"slices"
 )
+
+var OperationPriority = map[string]int{"+": 0, "-": 0, "*": 1, "/": 1, "^": 2}
 
 type Parser struct {
 	firstPosition   int
@@ -28,7 +30,7 @@ func NewFromStream(stream *tokenizer.TokenStream) *Parser {
 }
 
 func (p *Parser) Parse() (*Node, error) {
-	stack := &utility.Stack[Node]{}
+	var list []*Node
 
 	for {
 		token := p.stream.Get(p.currentPosition)
@@ -56,73 +58,73 @@ func (p *Parser) Parse() (*Node, error) {
 				return nil, err
 			}
 
-			if stack.IsEmpty() {
-				stack.Push(subNode)
-			} else {
-				node, _ := stack.Top()
+			subNode.Priority = 0
 
-				if node.Value.Type == tokenizer.TypeNumber {
-					return nil, fmt.Errorf("find another number on top of stack: %d", p.currentPosition)
-				}
-
-				if node.Left == nil {
-					node.Left = subNode
-				} else if node.Right == nil {
-					node.Right = subNode
-				} else {
-					return nil, fmt.Errorf("find orphan bracers: %d", p.currentPosition)
-				}
-			}
+			list = append(list, subNode)
 
 			p.currentPosition = endPosition
 		}
 
 		if token.Type == tokenizer.TypeOperation {
-			if stack.IsEmpty() {
-				return nil, fmt.Errorf("cant use infix operator without left part at position: %d", p.currentPosition)
-			}
+			node := &Node{Value: token, Priority: OperationPriority[token.Value]}
 
-			node, _ := stack.Top()
-
-			if node.Value.Type == tokenizer.TypeNumber {
-				stack.Pop()
-
-				stack.Push(&Node{Value: token, Left: node})
-			} else if node.Right == nil {
-				node.Right = &Node{Value: token}
-			} else {
-				stack.Pop()
-
-				stack.Push(&Node{Value: token, Left: node})
-			}
+			list = append(list, node)
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			if stack.IsEmpty() {
-				stack.Push(&Node{Value: token})
-			} else {
-				node, _ := stack.Top()
-
-				if node.Value.Type == tokenizer.TypeNumber {
-					return nil, fmt.Errorf("find another number on top of stack: %d", p.currentPosition)
-				}
-
-				if node.Left == nil {
-					node.Left = &Node{Value: token}
-				} else if node.Right == nil {
-					node.Right = &Node{Value: token}
-				} else {
-					return nil, fmt.Errorf("find orphan number: %d", p.currentPosition)
-				}
-			}
+			list = append(list, &Node{Value: token, Priority: 0})
 		}
 
 		if p.currentPosition == p.lastPosition {
-			tree, _ := stack.Top()
-
-			return tree, nil
+			break
 		}
 
 		p.currentPosition++
 	}
+
+	targetPriority := 2
+
+	for {
+		i := -1
+		for {
+			i++
+
+			if len(list) < 2 || i >= len(list) {
+				break
+			}
+
+			item := list[i]
+
+			if item.Priority != targetPriority {
+				continue
+			}
+
+			if item.IsFilled() {
+				continue
+			}
+
+			if i == 0 || i >= len(list) {
+				return nil, fmt.Errorf("cant use infix operator without left or right part at: %d", p.currentPosition)
+			}
+
+			item.Left = list[i-1]
+			item.Right = list[i+1]
+
+			list = slices.Replace(list, i-1, i+2, item)
+
+			i = i - 2
+		}
+
+		if targetPriority == 0 {
+			break
+		}
+
+		targetPriority--
+	}
+
+	if len(list) != 1 {
+		return nil, fmt.Errorf("after all transformations node list contains invalid amount of nodes: %d", len(list))
+	}
+
+	return list[0], nil
 }

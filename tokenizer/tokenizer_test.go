@@ -38,5 +38,9 @@ func TestWhenSimpleAddition(t *testing.T) {
 		if expectedToken.Value != actualToken.Value {
 			t.Fatalf("Expected: %v\nActual: %v", expectedToken.Value, actualToken.Value)
 		}
+
+		if expectedToken.Type != actualToken.Type {
+			t.Fatalf("Expected type: %v\nActual type: %v", expectedToken.Type, actualToken.Type)
+		}
 	}
 }

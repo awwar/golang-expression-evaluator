@@ -1,12 +1,13 @@
 package tokenizer
 
 import (
-	"regexp"
+	"strings"
 )
 
 var (
 	operations = map[string]bool{"-": true, "+": true, "/": true, "*": true}
 	bracers    = map[string]bool{"(": true, ")": true}
+	numbers    = "0123456789."
 )
 
 type Tokenizer struct {
@@ -35,9 +36,7 @@ func (ths *Tokenizer) consume(expression *string, pos int) error {
 		return nil
 	}
 
-	isNumber, _ := regexp.MatchString(`[0-9.]`, char)
-
-	if isNumber {
+	if strings.Contains(numbers, char) {
 		CurrentType = TypeNumber
 	} else if operations[char] {
 		CurrentType = TypeOperation
