@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	var expression string = "1 + 2 * summ1(3 + 4) / 5 + 6"
+	//expression := "1 + 2 * sum(3 + 4) / 5 + 6"
+	expression := "sum(1 + 2, 3, sum(4 + 5, 6))"
 
 	fmt.Println(expression)
 
@@ -43,7 +44,7 @@ func main() {
 
 	fmt.Println(root.String(0))
 
-	result, err := virtual_machine.Invoke(&root)
+	result, err := virtual_machine.Invoke(root)
 
 	if err != nil {
 		fmt.Println(err)

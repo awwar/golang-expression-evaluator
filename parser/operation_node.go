@@ -27,7 +27,7 @@ func (o *OperationNode) String(indent int) string {
 		rightGraph = fmt.Sprintf("%s└── R %s", stringIndent, o.Right.String(indent+1))
 	}
 
-	return fmt.Sprintf("%s\n%s%s", o.Operation, leftGraph, rightGraph)
+	return fmt.Sprintf("%s\n%s\n%s", o.Operation, leftGraph, rightGraph)
 }
 
 func (o *OperationNode) SetPriority(priority int) {

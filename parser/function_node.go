@@ -16,10 +16,8 @@ func (f *FunctionNode) String(indent int) string {
 
 	branches := ""
 
-	branchesIndent := indent + 1
-
 	for i, n := range f.Params {
-		branches = branches + fmt.Sprintf("%s└── #%d %s", stringIndent, i, n.String(branchesIndent))
+		branches = branches + fmt.Sprintf("%s└── #%d %s\n", stringIndent, i, n.String(indent+1))
 	}
 
 	return fmt.Sprintf("%s\n%s", f.Name, branches)

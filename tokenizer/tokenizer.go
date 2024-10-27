@@ -5,10 +5,11 @@ import (
 )
 
 var (
-	operations = map[string]bool{"-": true, "+": true, "/": true, "*": true}
-	bracers    = map[string]bool{"(": true, ")": true}
-	numbers    = "0123456789."
-	wordChars  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true}
+	bracers      = map[string]bool{"(": true, ")": true}
+	numbers      = "0123456789."
+	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+	singleTokens = map[int]bool{TypeSemicolon: true, TypeBrackets: true, TypeOperation: true}
 )
 
 type Tokenizer struct {
@@ -47,6 +48,8 @@ func (t *Tokenizer) consume(expression *string, pos int) error {
 		if t.LastType == TypeWord {
 			CurrentType = TypeWord
 		}
+	} else if char == "," {
+		CurrentType = TypeSemicolon
 	} else if operations[char] {
 		CurrentType = TypeOperation
 	} else if bracers[char] {
@@ -65,7 +68,7 @@ func (t *Tokenizer) consume(expression *string, pos int) error {
 		t.LastType = CurrentType
 	}
 
-	if t.LastType != CurrentType {
+	if t.LastType != CurrentType || singleTokens[CurrentType] {
 		t.Stream.Push(&Token{Value: t.Value, Type: t.LastType})
 
 		t.Value = ""
