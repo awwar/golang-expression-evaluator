@@ -9,30 +9,30 @@ type TokenStream struct {
 	Tokens []*Token
 }
 
-func (ths *TokenStream) Length() int {
-	return len(ths.Tokens)
+func (t *TokenStream) Length() int {
+	return len(t.Tokens)
 }
 
-func (ths *TokenStream) Push(token *Token) {
-	ths.Tokens = append(ths.Tokens, token)
+func (t *TokenStream) Push(token *Token) {
+	t.Tokens = append(t.Tokens, token)
 }
 
-func (ths *TokenStream) Get(index int) *Token {
+func (t *TokenStream) Get(index int) *Token {
 	var token *Token
 
-	if ths.Length() > index {
-		token = ths.Tokens[index]
+	if t.Length() > index {
+		token = t.Tokens[index]
 	}
 
 	return token
 }
 
-func (ths *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
+func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
 	var bracersCount int = 0
 	var currenPosition int = startBracer
 
 	for {
-		value := ths.Get(currenPosition)
+		value := t.Get(currenPosition)
 
 		if value == nil {
 			break
@@ -56,13 +56,21 @@ func (ths *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
 	return -1
 }
 
-func (ths *TokenStream) New() *TokenStream { return &TokenStream{} }
+func (t *TokenStream) NextTokenIsBracer(position int) bool {
+	nextToken := t.Get(position + 1)
 
-func (ths *TokenStream) String() string {
+	if nextToken == nil {
+		return false
+	}
+
+	return nextToken.Type == TypeBrackets
+}
+
+func (t *TokenStream) String() string {
 	var output string = ""
 
-	for i := range ths.Tokens {
-		var value Token = *ths.Tokens[i]
+	for i := range t.Tokens {
+		var value Token = *t.Tokens[i]
 
 		output = fmt.Sprintf("%s\n	%s", output, value.String())
 	}

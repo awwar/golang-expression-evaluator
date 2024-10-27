@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	var expression string = "1 + 2 * (3 + 4) / 5 + 6"
+	var expression string = "1 + 2 * summ1(3 + 4) / 5 + 6"
 
 	fmt.Println(expression)
 
-	var tokenizerMachine *tokenizer.Tokenizer = &tokenizer.Tokenizer{}
+	tokenizerMachine := tokenizer.New()
 
 	tokenStream, err := tokenizerMachine.ExpressionToStream(&expression)
 
@@ -33,9 +33,17 @@ func main() {
 		return
 	}
 
-	fmt.Println(tree)
+	if len(tree) != 1 {
+		fmt.Println("All nodes must collapse in one node, got: ", len(tree))
 
-	result, err := virtual_machine.Invoke(tree)
+		return
+	}
+
+	root := tree[0]
+
+	fmt.Println(root.String(0))
+
+	result, err := virtual_machine.Invoke(&root)
 
 	if err != nil {
 		fmt.Println(err)
