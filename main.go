@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//expression := "1 + 2 * sum(3 + 4) / 5 + 6"
-	expression := "sum(1 + 2, 3, sum(4 + 5, 6))"
+	expression := "sum(1 + 2, 3.4, sum(5 + 6, 7))"
 
 	fmt.Println(expression)
 
@@ -53,5 +53,5 @@ func main() {
 		return
 	}
 
-	fmt.Printf("result = %f", result)
+	fmt.Printf("result = %s", result)
 }

@@ -52,9 +52,9 @@ func (p *Parser) Parse() ([]*Node, error) {
 				return nil, err
 			}
 
-			Node := CreateAsOperation(token.Value, subNodes, 0)
+			node := CreateAsOperation(token.Value, subNodes, 0)
 
-			list = append(list, Node)
+			list = append(list, node)
 		}
 
 		if token.Type == tokenizer.TypeBrackets {

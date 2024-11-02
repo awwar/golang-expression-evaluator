@@ -3,23 +3,26 @@ package virtual_machine
 import (
 	"expression_parser/parser"
 	"fmt"
-	"math"
-	"strconv"
+	"strings"
 )
 
-func Invoke(node *parser.Node) (float64, error) {
+func Invoke(node *parser.Node) (*Value, error) {
+	result := &Value{Type: Integer, Value: "0"}
+
 	if node.Type == parser.TypeOperation {
 		if node.Value == "sum" {
-			result := 0.0
-
 			for _, paramNode := range node.Params {
 				paramResult, err := Invoke(paramNode)
 
 				if err != nil {
-					return 0.0, err
+					return nil, err
 				}
 
-				result += paramResult
+				result, err = result.Add(paramResult)
+
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			return result, nil
@@ -28,36 +31,49 @@ func Invoke(node *parser.Node) (float64, error) {
 		firstOperand, err := Invoke(node.Params[0])
 
 		if err != nil {
-			return 0.0, err
+			return nil, err
 		}
 
 		secondOperand, err := Invoke(node.Params[1])
 
 		if err != nil {
-			return 0.0, err
+			return nil, err
 		}
 
 		switch node.Value {
 		case "+":
-			return firstOperand + secondOperand, nil
+			result, err = firstOperand.Add(secondOperand)
 		case "-":
-			return firstOperand - secondOperand, nil
+			result, err = firstOperand.Subtraction(secondOperand)
 		case "*":
-			return firstOperand * secondOperand, nil
+			result, err = firstOperand.Multiplication(secondOperand)
 		case "/":
-			return firstOperand / secondOperand, nil
+			result, err = firstOperand.Divide(secondOperand)
 		case "^":
-			return math.Pow(firstOperand, secondOperand), nil
+			result, err = firstOperand.Power(secondOperand)
 		default:
-			return 0.0, fmt.Errorf(`operand type "%s" is not supported`, node.Value)
+			return nil, fmt.Errorf(`operand type "%s" is not supported`, node.Value)
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
 	}
 
 	if node.Type == parser.TypeConstant {
-		value, err := strconv.ParseFloat(node.Value, 32)
+		value := &Value{
+			Type:  Integer,
+			Value: node.Value,
+		}
 
-		return value, err
+		if strings.Contains(node.Value, ".") {
+			value.Type = Float
+		}
+
+		return value, nil
 	}
 
-	return 0.0, fmt.Errorf(`onexpected operator`)
+	return nil, fmt.Errorf(`onexpected operation %s`, node.Value)
 }
