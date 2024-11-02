@@ -22,6 +22,7 @@ func main() {
 
 		return
 	}
+
 	fmt.Println(tokenStream)
 
 	parseMachine := parser.NewFromStream(tokenStream)

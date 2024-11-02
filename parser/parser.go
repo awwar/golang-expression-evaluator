@@ -29,8 +29,8 @@ func NewFromStream(stream *tokenizer.TokenStream) *Parser {
 	return New(stream, 0, stream.Length()-1)
 }
 
-func (p *Parser) Parse() ([]Node, error) {
-	var list []Node
+func (p *Parser) Parse() ([]*Node, error) {
+	var list []*Node
 
 	for {
 		token := p.stream.Get(p.currentPosition)
@@ -52,12 +52,9 @@ func (p *Parser) Parse() ([]Node, error) {
 				return nil, err
 			}
 
-			functionNode := FunctionNode{
-				Name:   token.Value,
-				Params: subNodes,
-			}
+			Node := CreateAsOperation(token.Value, subNodes, 0)
 
-			list = append(list, &functionNode)
+			list = append(list, Node)
 		}
 
 		if token.Type == tokenizer.TypeBrackets {
@@ -79,20 +76,15 @@ func (p *Parser) Parse() ([]Node, error) {
 		}
 
 		if token.Type == tokenizer.TypeOperation {
-			operationNode := OperationNode{
-				Operation: token.Value,
-				Left:      nil,
-				Right:     nil,
-				Priority:  OperationPriority[token.Value],
-			}
+			operationNode := CreateAsOperation(token.Value, make([]*Node, 2), OperationPriority[token.Value])
 
-			list = append(list, &operationNode)
+			list = append(list, operationNode)
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			numberNode := ValueNode{Value: token.Value}
+			numberNode := CreateAsConstant(token.Value)
 
-			list = append(list, &numberNode)
+			list = append(list, numberNode)
 		}
 
 		if p.currentPosition == p.lastPosition {
@@ -127,7 +119,8 @@ func (p *Parser) Parse() ([]Node, error) {
 				return nil, fmt.Errorf("cant use infix operator without left or right part at: %d", p.currentPosition)
 			}
 
-			item.Fill(list[i-1], list[i+1])
+			item.SetSubNode(0, list[i-1])
+			item.SetSubNode(1, list[i+1])
 
 			list = slices.Replace(list, i-1, i+2, item)
 
@@ -144,7 +137,7 @@ func (p *Parser) Parse() ([]Node, error) {
 	return list, nil
 }
 
-func (p *Parser) subparseBracers() ([]Node, error) {
+func (p *Parser) subparseBracers() ([]*Node, error) {
 	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
 
 	if endPosition == -1 {

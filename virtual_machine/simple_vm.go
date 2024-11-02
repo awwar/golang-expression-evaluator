@@ -7,14 +7,12 @@ import (
 	"strconv"
 )
 
-func Invoke(node parser.Node) (float64, error) {
-	switch n := node.(type) {
-	case *parser.FunctionNode:
-		switch n.Name {
-		case "sum":
+func Invoke(node *parser.Node) (float64, error) {
+	if node.Type == parser.TypeOperation {
+		if node.Value == "sum" {
 			result := 0.0
 
-			for _, paramNode := range n.Params {
+			for _, paramNode := range node.Params {
 				paramResult, err := Invoke(paramNode)
 
 				if err != nil {
@@ -25,23 +23,21 @@ func Invoke(node parser.Node) (float64, error) {
 			}
 
 			return result, nil
-		default:
-			return 0.0, fmt.Errorf(`function "%s" is not supported`, n.Name)
 		}
-	case *parser.OperationNode:
-		firstOperand, err := Invoke(n.Left)
+
+		firstOperand, err := Invoke(node.Params[0])
 
 		if err != nil {
 			return 0.0, err
 		}
 
-		secondOperand, err := Invoke(n.Right)
+		secondOperand, err := Invoke(node.Params[1])
 
 		if err != nil {
 			return 0.0, err
 		}
 
-		switch n.Operation {
+		switch node.Value {
 		case "+":
 			return firstOperand + secondOperand, nil
 		case "-":
@@ -53,13 +49,15 @@ func Invoke(node parser.Node) (float64, error) {
 		case "^":
 			return math.Pow(firstOperand, secondOperand), nil
 		default:
-			return 0.0, fmt.Errorf(`operand type "%s" is not supported`, n.Operation)
+			return 0.0, fmt.Errorf(`operand type "%s" is not supported`, node.Value)
 		}
-	case *parser.ValueNode:
-		value, err := strconv.ParseFloat(n.Value, 32)
+	}
+
+	if node.Type == parser.TypeConstant {
+		value, err := strconv.ParseFloat(node.Value, 32)
 
 		return value, err
-	default:
-		return 0.0, fmt.Errorf(`onexpected operator`)
 	}
+
+	return 0.0, fmt.Errorf(`onexpected operator`)
 }
