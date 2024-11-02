@@ -44,9 +44,9 @@ func Invoke(node *parser.Node) (*Value, error) {
 		case "+":
 			result, err = firstOperand.Add(secondOperand)
 		case "-":
-			result, err = firstOperand.Subtraction(secondOperand)
+			result, err = firstOperand.Subtract(secondOperand)
 		case "*":
-			result, err = firstOperand.Multiplication(secondOperand)
+			result, err = firstOperand.Multiply(secondOperand)
 		case "/":
 			result, err = firstOperand.Divide(secondOperand)
 		case "^":

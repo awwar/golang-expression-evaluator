@@ -1,7 +1,6 @@
 package virtual_machine
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 )
@@ -21,120 +20,40 @@ func (v *Value) String() string {
 }
 
 func (v *Value) Add(rv *Value) (*Value, error) {
-	result := v.buildResult(rv)
-
-	if result.Type == Float {
-		lValue, rValue, err := v.parseFloats(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%f", lValue+rValue)
-	} else {
-		lValue, rValue, err := v.parseInt(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%d", lValue+rValue)
-	}
-
-	return result, nil
+	return v.calculate(rv, func(lValue float64, rValue float64) float64 { return lValue + rValue })
 }
 
-func (v *Value) Subtraction(rv *Value) (*Value, error) {
-	result := v.buildResult(rv)
-
-	if result.Type == Float {
-		lValue, rValue, err := v.parseFloats(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%f", lValue-rValue)
-	} else {
-		lValue, rValue, err := v.parseInt(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%d", lValue-rValue)
-	}
-
-	return result, nil
+func (v *Value) Subtract(rv *Value) (*Value, error) {
+	return v.calculate(rv, func(lValue float64, rValue float64) float64 { return lValue - rValue })
 }
 
-func (v *Value) Multiplication(rv *Value) (*Value, error) {
-	result := v.buildResult(rv)
-
-	if result.Type == Float {
-		lValue, rValue, err := v.parseFloats(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%f", lValue*rValue)
-	} else {
-		lValue, rValue, err := v.parseInt(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%d", lValue*rValue)
-	}
-
-	return result, nil
+func (v *Value) Multiply(rv *Value) (*Value, error) {
+	return v.calculate(rv, func(lValue float64, rValue float64) float64 { return lValue * rValue })
 }
 
 func (v *Value) Divide(rv *Value) (*Value, error) {
-	result := v.buildResult(rv)
-
-	if result.Type == Float {
-		lValue, rValue, err := v.parseFloats(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%f", lValue/rValue)
-	} else {
-		lValue, rValue, err := v.parseInt(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%d", lValue/rValue)
-	}
-
-	return result, nil
+	return v.calculate(rv, func(lValue float64, rValue float64) float64 { return lValue / rValue })
 }
 
 func (v *Value) Power(rv *Value) (*Value, error) {
+	return v.calculate(rv, func(lValue float64, rValue float64) float64 { return math.Pow(lValue, rValue) })
+}
+
+func (v *Value) calculate(rv *Value, callback func(float64, float64) float64) (*Value, error) {
 	result := v.buildResult(rv)
 
+	lValue, rValue, err := v.parseFloats(rv)
+
+	if err != nil {
+		return nil, err
+	}
+
+	value := callback(lValue, rValue)
+
 	if result.Type == Float {
-		lValue, rValue, err := v.parseFloats(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%f", math.Pow(lValue, rValue))
+		result.Value = strconv.FormatFloat(value, 'f', 6, 64)
 	} else {
-		lValue, rValue, err := v.parseInt(rv)
-
-		if err != nil {
-			return nil, err
-		}
-
-		result.Value = fmt.Sprintf("%d", int(math.Pow(float64(lValue), float64(rValue))))
+		result.Value = strconv.Itoa(int(value))
 	}
 
 	return result, nil
@@ -154,29 +73,13 @@ func (v *Value) buildResult(rv *Value) *Value {
 }
 
 func (v *Value) parseFloats(rv *Value) (float64, float64, error) {
-	lValue, err := strconv.ParseFloat(v.Value, 32)
+	lValue, err := strconv.ParseFloat(v.Value, 64)
 
 	if err != nil {
 		return 0, 0, err
 	}
 
-	rValue, err := strconv.ParseFloat(rv.Value, 32)
-
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return lValue, rValue, nil
-}
-
-func (v *Value) parseInt(rv *Value) (int64, int64, error) {
-	lValue, err := strconv.ParseInt(v.Value, 10, 64)
-
-	if err != nil {
-		return 0, 0, err
-	}
-
-	rValue, err := strconv.ParseInt(rv.Value, 10, 64)
+	rValue, err := strconv.ParseFloat(rv.Value, 64)
 
 	if err != nil {
 		return 0, 0, err
