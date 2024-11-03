@@ -82,7 +82,13 @@ func (p *Parser) Parse() ([]*Node, error) {
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			numberNode := CreateAsConstant(token.Value)
+			numberNode := CreateAsNumber(token.Value)
+
+			list = append(list, numberNode)
+		}
+
+		if token.Type == tokenizer.TypeString {
+			numberNode := CreateAsString(token.Value)
 
 			list = append(list, numberNode)
 		}

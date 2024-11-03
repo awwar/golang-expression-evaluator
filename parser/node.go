@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -12,24 +13,53 @@ const (
 
 type Node struct {
 	Type     int
-	Value    string
+	Value    *Value
 	Params   []*Node
 	Priority int
 }
 
 func CreateAsOperation(operation string, params []*Node, priority int) *Node {
 	return &Node{
-		Type:     TypeOperation,
-		Value:    operation,
+		Type: TypeOperation,
+		Value: &Value{
+			Type:      Atom,
+			StringVal: &operation,
+		},
 		Params:   params,
 		Priority: priority,
 	}
 }
 
-func CreateAsConstant(value string) *Node {
+func CreateAsNumber(value string) *Node {
+	valueObject := Value{}
+
+	if strings.Contains(value, ".") {
+		val, _ := strconv.ParseFloat(value, 64)
+
+		valueObject.Type = Float
+		valueObject.FloatVal = &val
+	} else {
+		val, _ := strconv.ParseInt(value, 0, 64)
+
+		valueObject.Type = Integer
+		valueObject.IntVal = &val
+	}
+
 	return &Node{
 		Type:     TypeConstant,
-		Value:    value,
+		Value:    &valueObject,
+		Params:   make([]*Node, 0),
+		Priority: 0,
+	}
+}
+
+func CreateAsString(value string) *Node {
+	return &Node{
+		Type: TypeConstant,
+		Value: &Value{
+			Type:      String,
+			StringVal: &value,
+		},
 		Params:   make([]*Node, 0),
 		Priority: 0,
 	}

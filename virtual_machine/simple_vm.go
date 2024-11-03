@@ -3,19 +3,30 @@ package virtual_machine
 import (
 	"expression_parser/parser"
 	"fmt"
-	"strings"
 )
 
-func Invoke(node *parser.Node) (*Value, error) {
-	result := &Value{Type: Integer, Value: "0"}
+func Invoke(node *parser.Node) (*parser.Value, error) {
+	if node.Type == parser.TypeConstant {
+		return node.Value, nil
+	}
 
 	if node.Type == parser.TypeOperation {
-		if node.Value == "sum" {
+		var result *parser.Value
+
+		operationName := *node.Value.StringVal
+
+		if operationName == "sum" {
 			for _, paramNode := range node.Params {
 				paramResult, err := Invoke(paramNode)
 
 				if err != nil {
 					return nil, err
+				}
+
+				if result == nil {
+					result = paramResult
+
+					continue
 				}
 
 				result, err = result.Add(paramResult)
@@ -40,7 +51,7 @@ func Invoke(node *parser.Node) (*Value, error) {
 			return nil, err
 		}
 
-		switch node.Value {
+		switch operationName {
 		case "+":
 			result, err = firstOperand.Add(secondOperand)
 		case "-":
@@ -60,19 +71,6 @@ func Invoke(node *parser.Node) (*Value, error) {
 		}
 
 		return result, nil
-	}
-
-	if node.Type == parser.TypeConstant {
-		value := &Value{
-			Type:  Integer,
-			Value: node.Value,
-		}
-
-		if strings.Contains(node.Value, ".") {
-			value.Type = Float
-		}
-
-		return value, nil
 	}
 
 	return nil, fmt.Errorf(`onexpected operation %s`, node.Value)
