@@ -10,10 +10,21 @@ const (
 	TypeWord      = iota
 	TypeSemicolon = iota
 	TypeString    = iota
+	TypeCall      = iota
 	TypeEOL       = iota
 )
 
-var MapTypeToTypeName = map[int]string{TypeNumber: "number", TypeOperation: "operation", TypeBrackets: "bracket", TypeWord: "word", TypeSemicolon: "semicolon", TypeString: "string"}
+var MapTypeToTypeName = map[int]string{
+	TypeEmpty:     "empty",
+	TypeNumber:    "number",
+	TypeOperation: "operation",
+	TypeBrackets:  "bracket",
+	TypeWord:      "word",
+	TypeCall:      "call_operator",
+	TypeSemicolon: "semicolon",
+	TypeString:    "string",
+	TypeEOL:       "EOL",
+}
 
 type Token struct {
 	Value string

@@ -98,3 +98,11 @@ func (f *Node) GetPriority() int {
 func (f *Node) SetSubNode(offset int, node *Node) {
 	f.Params[offset] = node
 }
+
+func (f *Node) PushNodeToHead(node *Node) {
+	if f.Params[0] == nil {
+		f.Params = make([]*Node, 0)
+	}
+
+	f.Params = append([]*Node{node}, f.Params...)
+}

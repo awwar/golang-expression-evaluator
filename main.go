@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	expression := `"result = " + (1 + 2 * sum(3 + 4) / 5 + 6)`
+	expression := `"result = ".uppercase().trim_space() + (1 + 2 * sum(3.4 + 4) / 5 + 6)`
 
 	fmt.Println(expression)
 

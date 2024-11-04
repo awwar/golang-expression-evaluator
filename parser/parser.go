@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-var OperationPriority = map[string]int{"+": 0, "-": 0, "*": 1, "/": 1, "^": 2}
+var OperationPriority = map[string]int{"+": 0, "-": 0, "*": 1, "/": 1, "^": 2, ".": 0}
 
 type Parser struct {
 	firstPosition   int
@@ -75,7 +75,7 @@ func (p *Parser) Parse() ([]*Node, error) {
 			list = append(list, subNode)
 		}
 
-		if token.Type == tokenizer.TypeOperation {
+		if token.Type == tokenizer.TypeOperation || token.Type == tokenizer.TypeCall {
 			operationNode := CreateAsOperation(token.Value, make([]*Node, 2), OperationPriority[token.Value])
 
 			list = append(list, operationNode)
@@ -125,12 +125,22 @@ func (p *Parser) Parse() ([]*Node, error) {
 				return nil, fmt.Errorf("cant use infix operator without left or right part at: %d", p.currentPosition)
 			}
 
-			item.SetSubNode(0, list[i-1])
-			item.SetSubNode(1, list[i+1])
+			//ToDo +-* is INFIX operators. DOT operator - just a mark for POSTFIX operation
+			if *item.Value.StringVal == "." {
+				item.Value = list[i+1].Value
+				item.PushNodeToHead(list[i-1])
 
-			list = slices.Replace(list, i-1, i+2, item)
+				list = slices.Replace(list, i-1, i+2, item)
 
-			i = i - 2
+				i = i - 1
+			} else {
+				item.SetSubNode(0, list[i-1])
+				item.SetSubNode(1, list[i+1])
+
+				list = slices.Replace(list, i-1, i+2, item)
+
+				i = i - 2
+			}
 		}
 
 		if targetPriority == 0 {
@@ -150,13 +160,14 @@ func (p *Parser) subparseBracers() ([]*Node, error) {
 		return nil, fmt.Errorf("cant find closed bracer for position: %d", p.currentPosition)
 	}
 
-	if p.currentPosition == endPosition-1 {
-		return nil, nil
+	var subNodes []*Node
+	var err error
+
+	if p.currentPosition != endPosition-1 {
+		subParser := New(p.stream, p.currentPosition+1, endPosition-1)
+
+		subNodes, err = subParser.Parse()
 	}
-
-	subParser := New(p.stream, p.currentPosition+1, endPosition-1)
-
-	subNodes, err := subParser.Parse()
 
 	p.currentPosition = endPosition
 

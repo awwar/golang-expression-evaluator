@@ -7,7 +7,7 @@ import (
 var (
 	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true}
 	bracers      = map[string]bool{"(": true, ")": true}
-	numbers      = "0123456789."
+	numbers      = "0123456789"
 	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
 	singleTokens = map[int]bool{TypeSemicolon: true, TypeBrackets: true, TypeOperation: true}
 )
@@ -35,6 +35,10 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 
 			continue
 		} else if t.LastType == TypeString {
+		} else if char == "." {
+			if t.LastType != TypeNumber {
+				t.changeTokenType(TypeCall)
+			}
 		} else if char == " " {
 			continue
 		} else if strings.Contains(numbers, char) {
