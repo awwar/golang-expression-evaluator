@@ -1,40 +1,100 @@
 package parser
 
 import (
-	"expression_parser/tokenizer"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
+const (
+	TypeOperation = iota
+	TypeConstant  = iota
+)
+
 type Node struct {
-	Value    *tokenizer.Token
-	Left     *Node
-	Right    *Node
+	Type     int
+	Value    *Value
+	Params   []*Node
 	Priority int
 }
 
-func (n *Node) IsFilled() bool {
-	return n.Value.Type != tokenizer.TypeOperation || (n.Left != nil && n.Right != nil)
+func CreateAsOperation(operation string, params []*Node, priority int) *Node {
+	return &Node{
+		Type: TypeOperation,
+		Value: &Value{
+			Type:      Atom,
+			StringVal: &operation,
+		},
+		Params:   params,
+		Priority: priority,
+	}
 }
 
-func (n *Node) String() string {
-	return n.toStringWithIndention(0)
+func CreateAsNumber(value string) *Node {
+	valueObject := Value{}
+
+	if strings.Contains(value, ".") {
+		val, _ := strconv.ParseFloat(value, 64)
+
+		valueObject.Type = Float
+		valueObject.FloatVal = &val
+	} else {
+		val, _ := strconv.ParseInt(value, 0, 64)
+
+		valueObject.Type = Integer
+		valueObject.IntVal = &val
+	}
+
+	return &Node{
+		Type:     TypeConstant,
+		Value:    &valueObject,
+		Params:   make([]*Node, 0),
+		Priority: 0,
+	}
 }
 
-func (n *Node) toStringWithIndention(indent int) string {
+func CreateAsString(value string) *Node {
+	return &Node{
+		Type: TypeConstant,
+		Value: &Value{
+			Type:      String,
+			StringVal: &value,
+		},
+		Params:   make([]*Node, 0),
+		Priority: 0,
+	}
+}
+
+func (f *Node) String(indent int) string {
 	stringIndent := strings.Repeat("      ", indent)
 
-	leftGraph := ""
+	branches := ""
 
-	if n.Left != nil {
-		leftGraph = fmt.Sprintf("%s└── L %s", stringIndent, n.Left.toStringWithIndention(indent+1))
+	for i, n := range f.Params {
+		branches = branches + fmt.Sprintf("%s└── #%d %s", stringIndent, i, n.String(indent+1))
 	}
 
-	rightGraph := ""
+	return fmt.Sprintf("%s\n%s", f.Value, branches)
+}
 
-	if n.Right != nil {
-		rightGraph = fmt.Sprintf("%s└── R %s", stringIndent, n.Right.toStringWithIndention(indent+1))
+func (f *Node) IsFilled() bool {
+	for _, n := range f.Params {
+		if n == nil || !n.IsFilled() {
+			return false
+		}
 	}
 
-	return fmt.Sprintf("%s\n%s%s", n.Value.Value, leftGraph, rightGraph)
+	return true
+}
+
+func (f *Node) SetPriority(priority int) {
+	f.Priority = priority
+}
+
+func (f *Node) GetPriority() int {
+	return f.Priority
+}
+
+func (f *Node) SetSubNode(offset int, node *Node) {
+	f.Params[offset] = node
 }
