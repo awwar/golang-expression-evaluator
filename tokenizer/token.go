@@ -3,12 +3,14 @@ package tokenizer
 import "fmt"
 
 const (
+	TypeEmpty     = iota
 	TypeNumber    = iota
 	TypeOperation = iota
 	TypeBrackets  = iota
 	TypeWord      = iota
 	TypeSemicolon = iota
 	TypeString    = iota
+	TypeEOL       = iota
 )
 
 var MapTypeToTypeName = map[int]string{TypeNumber: "number", TypeOperation: "operation", TypeBrackets: "bracket", TypeWord: "word", TypeSemicolon: "semicolon", TypeString: "string"}

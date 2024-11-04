@@ -19,67 +19,67 @@ type Tokenizer struct {
 }
 
 func New() *Tokenizer {
-	return &Tokenizer{}
+	return &Tokenizer{LastType: TypeEmpty}
 }
 
 func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error) {
 	for i := 0; i < len(*expression); i++ {
-		err := t.consume(expression, i)
+		char := string((*expression)[i])
 
-		if err != nil {
-			return nil, err
+		if char == `"` {
+			if t.LastType == TypeString {
+				t.changeTokenType(TypeEmpty)
+			} else {
+				t.changeTokenType(TypeString)
+			}
+
+			continue
+		} else if t.LastType == TypeString {
+		} else if char == " " {
+			continue
+		} else if strings.Contains(numbers, char) {
+			if t.LastType == TypeWord {
+				t.changeTokenType(TypeWord)
+			} else {
+				t.changeTokenType(TypeNumber)
+			}
+		} else if char == "," {
+			t.changeTokenType(TypeSemicolon)
+		} else if operations[char] {
+			t.changeTokenType(TypeOperation)
+		} else if bracers[char] {
+			t.changeTokenType(TypeBrackets)
+		} else if strings.Contains(wordChars, char) {
+			if t.LastType == TypeNumber {
+				t.swapTokenType(TypeWord)
+			}
+
+			t.changeTokenType(TypeWord)
+		} else {
+			return nil, &TokenizeError{Position: i, Expression: expression}
 		}
+
+		t.Value = t.Value + char
 	}
+
+	t.changeTokenType(TypeEOL)
 
 	return &t.Stream, nil
 }
 
-func (t *Tokenizer) consume(expression *string, pos int) error {
-	var CurrentType int = -1
-	char := string((*expression)[pos])
-
-	if char == " " {
-		return nil
+func (t *Tokenizer) changeTokenType(newType int) {
+	if t.LastType == newType && !singleTokens[newType] {
+		return
 	}
 
-	if strings.Contains(numbers, char) {
-		CurrentType = TypeNumber
-
-		if t.LastType == TypeWord {
-			CurrentType = TypeWord
-		}
-	} else if char == "," {
-		CurrentType = TypeSemicolon
-	} else if operations[char] {
-		CurrentType = TypeOperation
-	} else if bracers[char] {
-		CurrentType = TypeBrackets
-	} else if strings.Contains(wordChars, char) {
-		CurrentType = TypeWord
-
-		if t.LastType == TypeNumber {
-			t.LastType = TypeWord
-		}
-	} else {
-		return &TokenizeError{Position: pos, Expression: expression}
-	}
-
-	if t.LastType == -1 {
-		t.LastType = CurrentType
-	}
-
-	if t.LastType != CurrentType || singleTokens[CurrentType] {
+	if t.LastType != TypeEmpty {
 		t.Stream.Push(&Token{Value: t.Value, Type: t.LastType})
-
-		t.Value = ""
-		t.LastType = CurrentType
 	}
 
-	t.Value = t.Value + char
+	t.Value = ""
+	t.LastType = newType
+}
 
-	if len(*expression)-1 == pos {
-		t.Stream.Push(&Token{Value: t.Value, Type: CurrentType})
-	}
-
-	return nil
+func (t *Tokenizer) swapTokenType(newType int) {
+	t.LastType = newType
 }

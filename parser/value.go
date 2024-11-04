@@ -22,14 +22,15 @@ type Value struct {
 	IntVal    *int64
 }
 
+// FOR REPR PURPOSE ONLY!!!
 func (v *Value) String() string {
-	if v.Type == Integer {
-		return fmt.Sprintf("%d", *v.IntVal)
-	} else if v.Type == Float {
-		return strconv.FormatFloat(*v.FloatVal, 'f', -1, 64)
+	asStringValue, _ := v.ToString()
+
+	if v.Type == String {
+		return fmt.Sprintf(`"%s"`, *asStringValue.StringVal)
 	}
 
-	return *v.StringVal
+	return *asStringValue.StringVal
 }
 
 func (v *Value) TypeAsString() string {
@@ -38,7 +39,20 @@ func (v *Value) TypeAsString() string {
 
 func (v *Value) Add(rv *Value) (*Value, error) {
 	if v.Type == String || rv.Type == String {
-		stVal := fmt.Sprintf("%s%s", v, rv)
+		leftValue, err := v.ToString()
+
+		if err != nil {
+			return nil, err
+		}
+
+		rightValue, err := rv.ToString()
+
+		if err != nil {
+			return nil, err
+		}
+
+		stVal := fmt.Sprintf("%s%s", *leftValue.StringVal, *rightValue.StringVal)
+
 		return &Value{StringVal: &stVal, Type: String}, nil
 	}
 
@@ -138,6 +152,23 @@ func (v *Value) ToFloat() (*Value, error) {
 	}
 
 	return nil, fmt.Errorf("unable to convert %s to float", v.TypeAsString())
+}
+
+func (v *Value) ToString() (*Value, error) {
+	newValue := *v
+	newValue.Type = String
+
+	if v.Type == Integer {
+		newString := fmt.Sprintf("%d", *v.IntVal)
+		newValue.StringVal = &newString
+		newValue.IntVal = nil
+	} else if v.Type == Float {
+		newString := strconv.FormatFloat(*v.FloatVal, 'f', -1, 64)
+		newValue.StringVal = &newString
+		newValue.FloatVal = nil
+	}
+
+	return &newValue, nil
 }
 
 func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb func(int64, int64) int64) (*Value, error) {
