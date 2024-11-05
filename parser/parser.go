@@ -75,7 +75,7 @@ func (p *Parser) Parse() ([]*Node, error) {
 			list = append(list, subNode)
 		}
 
-		if token.Type == tokenizer.TypeOperation || token.Type == tokenizer.TypeCall {
+		if token.Type == tokenizer.TypeOperation {
 			operationNode := CreateAsOperation(token.Value, make([]*Node, 2), OperationPriority[token.Value])
 
 			list = append(list, operationNode)
@@ -111,35 +111,79 @@ func (p *Parser) Parse() ([]*Node, error) {
 				break
 			}
 
-			item := list[i]
+			currentNode := list[i]
 
-			if item.GetPriority() != targetPriority {
+			if currentNode.GetPriority() != targetPriority {
 				continue
 			}
 
-			if item.IsFilled() {
+			if currentNode.IsFilled() {
 				continue
 			}
 
-			if i == 0 || i >= len(list) {
-				return nil, fmt.Errorf("cant use infix operator without left or right part at: %d", p.currentPosition)
+			if i >= len(list) {
+				return nil, fmt.Errorf("cant use infix operator without rightNode part at: %d", p.currentPosition)
 			}
 
-			//ToDo +-* is INFIX operators. DOT operator - just a mark for POSTFIX operation
-			if *item.Value.StringVal == "." {
-				item.Value = list[i+1].Value
-				item.PushNodeToHead(list[i-1])
+			var leftNode *Node
 
-				list = slices.Replace(list, i-1, i+2, item)
+			if i > 0 {
+				leftNode = list[i-1]
+			}
+
+			rightNode := list[i+1]
+
+			if leftNode == nil {
+				newNode, err := p.createNegativeNode(currentNode, rightNode)
+
+				if err != nil {
+					return nil, err
+				}
+
+				list = slices.Replace(list, 0, 2, newNode)
+
+				continue
+			}
+
+			if rightNode.Value.IsMinusOrPlus() && !rightNode.IsFilled() {
+				rightRight := list[i+2]
+
+				newNode, err := p.createNegativeNode(rightNode, rightRight)
+
+				if err != nil {
+					return nil, err
+				}
+
+				list = slices.Replace(list, i+1, i+3, newNode)
+				i = i - 1
+
+				continue
+			}
+
+			if *currentNode.Value.StringVal != "." {
+				currentNode.SetSubNode(0, leftNode)
+				currentNode.SetSubNode(1, rightNode)
+
+				list = slices.Replace(list, i-1, i+2, currentNode)
+
+				i = i - 2
+
+				continue
+			}
+
+			if leftNode.Value.IsNumber() && rightNode.Value.IsNumber() {
+				newNode := CreateAsNumber(fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal))
+
+				list = slices.Replace(list, i-1, i+2, newNode)
 
 				i = i - 1
 			} else {
-				item.SetSubNode(0, list[i-1])
-				item.SetSubNode(1, list[i+1])
+				currentNode.Value = rightNode.Value
+				currentNode.PushNodeToHead(leftNode)
 
-				list = slices.Replace(list, i-1, i+2, item)
+				list = slices.Replace(list, i-1, i+2, currentNode)
 
-				i = i - 2
+				i = i - 1
 			}
 		}
 
@@ -176,4 +220,48 @@ func (p *Parser) subparseBracers() ([]*Node, error) {
 	}
 
 	return subNodes, nil
+}
+
+func (p *Parser) createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
+	operation := *operationNode.Value.StringVal
+
+	if operation == "-" {
+		if operandNode.Value.IsNumber() {
+			var minusValue int64 = -1
+			value := Value{
+				Type:      Integer,
+				StringVal: nil,
+				FloatVal:  nil,
+				IntVal:    &minusValue,
+			}
+
+			multipliedValue, err := operandNode.Value.Multiply(&value)
+
+			if err != nil {
+				return nil, err
+			}
+
+			stringVal, err := multipliedValue.ToString()
+
+			if err != nil {
+				return nil, err
+			}
+
+			numberNode := CreateAsNumber(*stringVal.StringVal)
+
+			return numberNode, nil
+		}
+
+		numberNode := CreateAsNumber("-1")
+
+		newOperationNode := CreateAsOperation("*", make([]*Node, 2), OperationPriority["*"])
+		newOperationNode.SetSubNode(0, numberNode)
+		newOperationNode.SetSubNode(1, operandNode)
+
+		return newOperationNode, nil
+	} else if operation == "+" {
+		return operandNode, nil
+	}
+
+	return nil, fmt.Errorf("unable to negate node with operation: %s", operation)
 }

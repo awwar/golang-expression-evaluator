@@ -10,7 +10,6 @@ const (
 	TypeWord      = iota
 	TypeSemicolon = iota
 	TypeString    = iota
-	TypeCall      = iota
 	TypeEOL       = iota
 )
 
@@ -20,7 +19,6 @@ var MapTypeToTypeName = map[int]string{
 	TypeOperation: "operation",
 	TypeBrackets:  "bracket",
 	TypeWord:      "word",
-	TypeCall:      "call_operator",
 	TypeSemicolon: "semicolon",
 	TypeString:    "string",
 	TypeEOL:       "EOL",
