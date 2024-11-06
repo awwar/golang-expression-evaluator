@@ -25,10 +25,11 @@ var MapTypeToTypeName = map[int]string{
 }
 
 type Token struct {
-	Value string
-	Type  int
+	Value    string
+	Type     int
+	Position int
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("{value: \"%s\", type: %s}", t.Value, MapTypeToTypeName[t.Type])
+	return fmt.Sprintf("{value: \"%s\", type: %s, pos: %d}", t.Value, MapTypeToTypeName[t.Type], t.Position)
 }

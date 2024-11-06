@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	expression := `"result = ".uppercase().trim_space() + (-1 + 2 * -sum(3.4 + 4) / 5 + 6)`
+	expression := `"result = ".uppercase().trim_space() + (-1 + 2 * -sum(3.4, 4) / 5 + 6)`
 
 	fmt.Println(expression)
 
@@ -26,10 +26,12 @@ func main() {
 
 	parseMachine := parser.NewFromStream(tokenStream)
 
-	tree, err := parseMachine.Parse()
+	tree, parseError := parseMachine.Parse()
 
-	if err != nil {
-		fmt.Println(err)
+	if parseError != nil {
+		parseError.EnrichWithExpression(&expression)
+
+		fmt.Println(parseError)
 
 		return
 	}
