@@ -11,7 +11,10 @@ const (
 	TypeConstant  = iota
 )
 
-var OperationPriority = map[string]int{"+": 0, "-": 0, "*": 1, "/": 1, "^": 2, ".": 0}
+var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, "^": 3, ".": 4}
+var StringPriority = 4
+var NumberPriority = 4
+var FunctionPriority = 4
 
 type Node struct {
 	Type          int
@@ -22,7 +25,7 @@ type Node struct {
 }
 
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
-	return &Node{
+	node := &Node{
 		Type: TypeOperation,
 		Value: &Value{
 			Type:      Atom,
@@ -32,6 +35,12 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 		Priority:      OperationPriority[operation],
 		TokenPosition: tokenPosition,
 	}
+
+	if !node.IsMathematicalOperation() {
+		node.Priority = FunctionPriority
+	}
+
+	return node
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
@@ -53,7 +62,7 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 		Type:          TypeConstant,
 		Value:         &valueObject,
 		Params:        make([]*Node, 0),
-		Priority:      0,
+		Priority:      NumberPriority,
 		TokenPosition: tokenPosition,
 	}
 }
@@ -66,18 +75,21 @@ func CreateAsString(value string, tokenPosition int) *Node {
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),
-		Priority:      0,
+		Priority:      StringPriority,
 		TokenPosition: tokenPosition,
 	}
 }
 
 func (f *Node) String(indent int) string {
-	stringIndent := strings.Repeat("      ", indent)
+	stringIndent := strings.Repeat("    ", indent)
 
 	branches := ""
 
-	for i, n := range f.Params {
-		branches = branches + fmt.Sprintf("%s└── #%d %s", stringIndent, i, n.String(indent+1))
+	for _, n := range f.Params {
+		if n == nil {
+			continue
+		}
+		branches = branches + fmt.Sprintf("%s└── %s", stringIndent, n.String(indent+1))
 	}
 
 	return fmt.Sprintf("%s\n%s", f.Value, branches)
@@ -96,21 +108,15 @@ func (f *Node) SetSubNode(offset int, node *Node) {
 }
 
 func (f *Node) PushNodeToHead(node *Node) {
-	if f.Params[0] == nil {
+	if len(f.Params) == 0 {
 		f.Params = make([]*Node, 0)
 	}
 
 	f.Params = append([]*Node{node}, f.Params...)
 }
 
-func (f *Node) IsFilled() bool {
-	for _, n := range f.Params {
-		if n == nil || !n.IsFilled() {
-			return false
-		}
-	}
-
-	return true
+func (f *Node) Deprioritize() {
+	f.Priority = -1
 }
 
 func (f *Node) IsMathematicalOperation() bool {
@@ -120,5 +126,37 @@ func (f *Node) IsMathematicalOperation() bool {
 
 	_, ok := OperationPriority[*f.Value.StringVal]
 
-	return ok
+	return ok && *f.Value.StringVal != "."
+}
+
+func (f *Node) IsNotCallOperation() bool {
+	if f.Type != TypeOperation {
+		return false
+	}
+
+	return *f.Value.StringVal != "."
+}
+
+func (f *Node) IsCallOperation() bool {
+	if f.Type != TypeOperation {
+		return false
+	}
+
+	return *f.Value.StringVal == "."
+}
+
+func (f *Node) IsNegatable() bool {
+	return f.IsFunction() || f.IsNumber()
+}
+
+func (f *Node) IsFunction() bool {
+	return f.Type == TypeOperation && !f.IsMathematicalOperation() && !f.IsCallOperation()
+}
+
+func (f *Node) IsNumber() bool {
+	return f.Value.IsNumber()
+}
+
+func (f *Node) IsMinusOrPlus() bool {
+	return f.Value.IsMinusOrPlus()
 }

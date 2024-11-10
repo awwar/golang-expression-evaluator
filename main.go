@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	expression := `"result = ".uppercase().trim_space() + (-1 + 2 * -sum(3.4, 4) / 5 + 6)`
+	expression := `"result = ".uppercase() + (-1 + -2sum(3.4, 4) / 5 + 6)`
 
 	fmt.Println(expression)
 
@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	fmt.Println(tokenStream)
+	//fmt.Println(tokenStream)
 
 	parseMachine := parser.NewFromStream(tokenStream)
 
@@ -38,6 +38,10 @@ func main() {
 
 	if len(tree) != 1 {
 		fmt.Println("All nodes must collapse in one node, got: ", len(tree))
+
+		for _, rt := range tree {
+			fmt.Println(rt.String(0))
+		}
 
 		return
 	}

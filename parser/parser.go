@@ -79,7 +79,11 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 			}
 
 			if len(subNodes) != 1 {
-				return nil, NewError(token.Position, "stand-alone brackets should frame exactly one node")
+				for _, rt := range subNodes {
+					fmt.Println(rt.String(0))
+				}
+
+				return nil, NewError(token.Position-1, "stand-alone brackets should frame exactly one node")
 			}
 
 			subNode := subNodes[0]
@@ -114,14 +118,21 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 		p.currentPosition++
 	}
 
-	targetPriority := 2
+	targetPriority := 4 + 1
 
 	for {
 		i := -1
+
+		if targetPriority == 0 {
+			break
+		}
+
+		targetPriority--
+
 		for {
 			i++
 
-			if len(list) < 2 || i+1 >= len(list) {
+			if len(list) < 2 || i >= len(list) {
 				break
 			}
 
@@ -131,58 +142,60 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 				continue
 			}
 
+			currentNode.Deprioritize()
+
 			var leftNode *Node
+			var rightNode *Node
 
 			if i > 0 {
 				leftNode = list[i-1]
 			}
 
-			rightNode := list[i+1]
-
-			// 2 sin(20) ~ (2 * sin(20))
-			//if currentNode.Value.IsNumber() && !rightNode.IsMathematicalOperation() {
-			//	newNode := CreateAsOperation("*", make([]*Node, 2), currentNode.TokenPosition)
-			//	newNode.SetSubNode(0, currentNode)
-			//	newNode.SetSubNode(1, rightNode)
-			//
-			//	list = slices.Replace(list, i, i+2, newNode)
-			//	i = i - 1
-			//
-			//	continue
-			//}
-
-			if currentNode.IsFilled() {
-				continue
+			if i < len(list)-1 {
+				rightNode = list[i+1]
 			}
 
 			if leftNode == nil {
-				newNode, err := p.createNegativeNode(currentNode, rightNode)
-
-				if err != nil {
-					return nil, err
-				}
-
-				list = slices.Replace(list, 0, 2, newNode)
-
 				continue
 			}
 
-			if rightNode.Value.IsMinusOrPlus() && !rightNode.IsFilled() {
-				rightRight := list[i+2]
+			// 2 sin(20) ~ (2 * sin(20))
+			if currentNode.IsFunction() && leftNode.IsNumber() {
+				newNode := CreateAsOperation("*", make([]*Node, 2), currentNode.TokenPosition)
+				newNode.SetSubNode(0, currentNode)
+				newNode.SetSubNode(1, leftNode)
 
-				newNode, err := p.createNegativeNode(rightNode, rightRight)
+				newNode.Deprioritize()
 
-				if err != nil {
-					return nil, err
-				}
+				list = slices.Replace(list, i-1, i+1, newNode)
 
-				list = slices.Replace(list, i+1, i+3, newNode)
 				i = i - 1
 
 				continue
 			}
 
-			if *currentNode.Value.StringVal != "." {
+			// 1 + - 1 ~ 1 + -1
+			if currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && (i < 2 || list[i-2].IsMathematicalOperation()) {
+				newNode, err := p.createNegativeNode(leftNode, currentNode)
+
+				if err != nil {
+					return nil, err
+				}
+
+				newNode.Deprioritize()
+
+				list = slices.Replace(list, i-1, i+1, newNode)
+
+				i = i - 1
+
+				continue
+			}
+
+			if rightNode == nil {
+				continue
+			}
+
+			if currentNode.IsMathematicalOperation() {
 				currentNode.SetSubNode(0, leftNode)
 				currentNode.SetSubNode(1, rightNode)
 
@@ -193,28 +206,30 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 				continue
 			}
 
-			if leftNode.Value.IsNumber() && rightNode.Value.IsNumber() {
-				strFloatNumber := fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal)
-				newNode := CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
+			if currentNode.IsCallOperation() {
+				if leftNode.IsNumber() && rightNode.IsNumber() {
+					strFloatNumber := fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal)
+					newNode := CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
 
-				list = slices.Replace(list, i-1, i+2, newNode)
+					list = slices.Replace(list, i-1, i+2, newNode)
 
-				i = i - 1
-			} else {
+					i = i - 1
+
+					newNode.Deprioritize()
+
+					continue
+				}
+
 				currentNode.Value = rightNode.Value
 				currentNode.PushNodeToHead(leftNode)
 
 				list = slices.Replace(list, i-1, i+2, currentNode)
 
 				i = i - 1
+
+				continue
 			}
 		}
-
-		if targetPriority == 0 {
-			break
-		}
-
-		targetPriority--
 	}
 
 	return list, nil
@@ -251,7 +266,7 @@ func (p *Parser) createNegativeNode(operationNode *Node, operandNode *Node) (*No
 	operation := *operationNode.Value.StringVal
 
 	if operation == "-" {
-		if operandNode.Value.IsNumber() {
+		if operandNode.IsNumber() {
 			var minusValue int64 = -1
 			value := Value{
 				Type:      Integer,
