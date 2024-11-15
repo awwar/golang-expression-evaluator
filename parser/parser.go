@@ -3,7 +3,6 @@ package parser
 import (
 	"expression_parser/tokenizer"
 	"fmt"
-	"slices"
 )
 
 type Parser struct {
@@ -12,6 +11,14 @@ type Parser struct {
 	currentPosition int
 
 	stream *tokenizer.TokenStream
+}
+
+var transformers = []Transformer{
+	UnsignedMultiplication,
+	ValueNegation,
+	SimpleMath,
+	FloatValue,
+	FunctionCalling,
 }
 
 func New(stream *tokenizer.TokenStream, firstPosition, lastPosition int) *Parser {
@@ -28,7 +35,7 @@ func NewFromStream(stream *tokenizer.TokenStream) *Parser {
 }
 
 func (p *Parser) Parse() ([]*Node, *Error) {
-	var list []*Node
+	list := &NodeList{}
 
 	for {
 		token := p.stream.Get(p.currentPosition)
@@ -48,7 +55,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 				return nil, err
 			}
 
-			list = append(list, subNodes...)
+			list.Push(subNodes...)
 
 			break
 		}
@@ -68,7 +75,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 
 			node := CreateAsOperation(token.Value, subNodes, token.Position)
 
-			list = append(list, node)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeBrackets {
@@ -90,25 +97,25 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 
 			subNode.SetPriority(0)
 
-			list = append(list, subNode)
+			list.Push(subNode)
 		}
 
 		if token.Type == tokenizer.TypeOperation {
-			operationNode := CreateAsOperation(token.Value, make([]*Node, 2), token.Position)
+			node := CreateAsOperation(token.Value, make([]*Node, 2), token.Position)
 
-			list = append(list, operationNode)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			numberNode := CreateAsNumber(token.Value, token.Position)
+			node := CreateAsNumber(token.Value, token.Position)
 
-			list = append(list, numberNode)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeString {
-			numberNode := CreateAsString(token.Value, token.Position)
+			node := CreateAsString(token.Value, token.Position)
 
-			list = append(list, numberNode)
+			list.Push(node)
 		}
 
 		if p.currentPosition == p.lastPosition {
@@ -121,118 +128,44 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 	targetPriority := 4 + 1
 
 	for {
-		i := -1
+		list.Next()
 
-		if targetPriority == 0 {
-			break
-		}
+		if list.IsEnd() {
+			list.Rewind()
 
-		targetPriority--
-
-		for {
-			i++
-
-			if len(list) < 2 || i >= len(list) {
+			if targetPriority == 0 {
 				break
 			}
 
-			currentNode := list[i]
+			targetPriority--
+		}
 
-			if currentNode.GetPriority() != targetPriority {
-				continue
+		currentNode := list.Current()
+
+		if currentNode.GetPriority() != targetPriority {
+			continue
+		}
+
+		currentNode.Deprioritize()
+
+		if list.Left() == nil {
+			continue
+		}
+
+		for _, transformer := range transformers {
+			isReplaced, err := transformer(list)
+
+			if err != nil {
+				return nil, err
 			}
 
-			currentNode.Deprioritize()
-
-			var leftNode *Node
-			var rightNode *Node
-
-			if i > 0 {
-				leftNode = list[i-1]
-			}
-
-			if i < len(list)-1 {
-				rightNode = list[i+1]
-			}
-
-			if leftNode == nil {
-				continue
-			}
-
-			// 2 sin(20) ~ (2 * sin(20))
-			if currentNode.IsFunction() && leftNode.IsNumber() {
-				newNode := CreateAsOperation("*", make([]*Node, 2), currentNode.TokenPosition)
-				newNode.SetSubNode(0, currentNode)
-				newNode.SetSubNode(1, leftNode)
-
-				newNode.Deprioritize()
-
-				list = slices.Replace(list, i-1, i+1, newNode)
-
-				i = i - 1
-
-				continue
-			}
-
-			// 1 + - 1 ~ 1 + -1
-			if currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && (i < 2 || list[i-2].IsMathematicalOperation()) {
-				newNode, err := p.createNegativeNode(leftNode, currentNode)
-
-				if err != nil {
-					return nil, err
-				}
-
-				newNode.Deprioritize()
-
-				list = slices.Replace(list, i-1, i+1, newNode)
-
-				i = i - 1
-
-				continue
-			}
-
-			if rightNode == nil {
-				continue
-			}
-
-			if currentNode.IsMathematicalOperation() {
-				currentNode.SetSubNode(0, leftNode)
-				currentNode.SetSubNode(1, rightNode)
-
-				list = slices.Replace(list, i-1, i+2, currentNode)
-
-				i = i - 2
-
-				continue
-			}
-
-			if currentNode.IsCallOperation() {
-				if leftNode.IsNumber() && rightNode.IsNumber() {
-					strFloatNumber := fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal)
-					newNode := CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
-
-					list = slices.Replace(list, i-1, i+2, newNode)
-
-					i = i - 1
-
-					newNode.Deprioritize()
-
-					continue
-				}
-
-				currentNode.Value = rightNode.Value
-				currentNode.PushNodeToHead(leftNode)
-
-				list = slices.Replace(list, i-1, i+2, currentNode)
-
-				i = i - 1
-
-				continue
+			if isReplaced {
+				break
 			}
 		}
 	}
 
-	return list, nil
+	return list.Result(), nil
 }
 
 func (p *Parser) subparseBracers() ([]*Node, *Error) {
@@ -260,48 +193,4 @@ func (p *Parser) subparseBracers() ([]*Node, *Error) {
 	}
 
 	return subNodes, nil
-}
-
-func (p *Parser) createNegativeNode(operationNode *Node, operandNode *Node) (*Node, *Error) {
-	operation := *operationNode.Value.StringVal
-
-	if operation == "-" {
-		if operandNode.IsNumber() {
-			var minusValue int64 = -1
-			value := Value{
-				Type:      Integer,
-				StringVal: nil,
-				FloatVal:  nil,
-				IntVal:    &minusValue,
-			}
-
-			multipliedValue, err := operandNode.Value.Multiply(&value)
-
-			if err != nil {
-				return nil, NewError(operationNode.TokenPosition, "negation value error: %s", err)
-			}
-
-			stringVal, err := multipliedValue.ToString()
-
-			if err != nil {
-				return nil, NewError(operationNode.TokenPosition, "negation value error: %s", err)
-			}
-
-			numberNode := CreateAsNumber(*stringVal.StringVal, operandNode.TokenPosition)
-
-			return numberNode, nil
-		}
-
-		numberNode := CreateAsNumber("-1", operandNode.TokenPosition)
-
-		newOperationNode := CreateAsOperation("*", make([]*Node, 2), operandNode.TokenPosition)
-		newOperationNode.SetSubNode(0, numberNode)
-		newOperationNode.SetSubNode(1, operandNode)
-
-		return newOperationNode, nil
-	} else if operation == "+" {
-		return operandNode, nil
-	}
-
-	return nil, NewError(operationNode.TokenPosition, "unable to negate node with operation %s", operation)
 }
