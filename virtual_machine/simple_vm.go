@@ -3,6 +3,7 @@ package virtual_machine
 import (
 	"expression_parser/parser"
 	"fmt"
+	"strings"
 )
 
 func Invoke(node *parser.Node) (*parser.Value, error) {
@@ -34,6 +35,40 @@ func Invoke(node *parser.Node) (*parser.Value, error) {
 				if err != nil {
 					return nil, err
 				}
+			}
+
+			return result, nil
+		}
+
+		if operationName == "uppercase" {
+			paramResult, err := Invoke(node.Params[0])
+
+			if err != nil {
+				return nil, err
+			}
+
+			strVal := strings.ToUpper(*paramResult.StringVal)
+
+			result = &parser.Value{
+				Type:      parser.String,
+				StringVal: &strVal,
+			}
+
+			return result, nil
+		}
+
+		if operationName == "trim_space" {
+			paramResult, err := Invoke(node.Params[0])
+
+			if err != nil {
+				return nil, err
+			}
+
+			strVal := strings.TrimSpace(*paramResult.StringVal)
+
+			result = &parser.Value{
+				Type:      parser.String,
+				StringVal: &strVal,
 			}
 
 			return result, nil

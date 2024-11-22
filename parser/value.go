@@ -136,6 +136,14 @@ func (v *Value) IsNumber() bool {
 	return v.Type == Float || v.Type == Integer
 }
 
+func (v *Value) IsMinusOrPlus() bool {
+	if v.Type != Atom {
+		return false
+	}
+
+	return *v.StringVal == "-" || *v.StringVal == "+"
+}
+
 func (v *Value) ToFloat() (*Value, error) {
 	newValue := *v
 
