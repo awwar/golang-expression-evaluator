@@ -31,5 +31,9 @@ func (s *Stack[T]) Top() (*T, error) {
 }
 
 func (s *Stack[T]) IsEmpty() bool {
+	if s == nil {
+		return true
+	}
+
 	return len(s.items) == 0
 }

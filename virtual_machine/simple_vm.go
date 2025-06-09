@@ -1,10 +1,26 @@
 package virtual_machine
 
 import (
-	"expression_parser/parser"
 	"fmt"
-	"strings"
+
+	"expression_parser/parser"
+	"expression_parser/virtual_machine/operations"
 )
+
+var (
+	operationsMap = map[string]Operation{
+		"sum":        operations.Sum,
+		"uppercase":  operations.Uppercase,
+		"trim_space": operations.TrimSpace,
+		"+":          operations.SigilAdd,
+		"-":          operations.SigilSubstract,
+		"*":          operations.SigilMultiply,
+		"/":          operations.SigilDivide,
+		"^":          operations.SigilPower,
+	}
+)
+
+type Operation func(node *parser.Node, invoker func(node *parser.Node) (*parser.Value, error)) (*parser.Value, error)
 
 func Invoke(node *parser.Node) (*parser.Value, error) {
 	if node.Type == parser.TypeConstant {
@@ -12,100 +28,14 @@ func Invoke(node *parser.Node) (*parser.Value, error) {
 	}
 
 	if node.Type == parser.TypeOperation {
-		var result *parser.Value
-
 		operationName := *node.Value.StringVal
 
-		if operationName == "sum" {
-			for _, paramNode := range node.Params {
-				paramResult, err := Invoke(paramNode)
-
-				if err != nil {
-					return nil, err
-				}
-
-				if result == nil {
-					result = paramResult
-
-					continue
-				}
-
-				result, err = result.Add(paramResult)
-
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			return result, nil
+		operation, ok := operationsMap[operationName]
+		if !ok {
+			return nil, fmt.Errorf(`operand "%s" is not supported`, operationName)
 		}
 
-		if operationName == "uppercase" {
-			paramResult, err := Invoke(node.Params[0])
-
-			if err != nil {
-				return nil, err
-			}
-
-			strVal := strings.ToUpper(*paramResult.StringVal)
-
-			result = &parser.Value{
-				Type:      parser.String,
-				StringVal: &strVal,
-			}
-
-			return result, nil
-		}
-
-		if operationName == "trim_space" {
-			paramResult, err := Invoke(node.Params[0])
-
-			if err != nil {
-				return nil, err
-			}
-
-			strVal := strings.TrimSpace(*paramResult.StringVal)
-
-			result = &parser.Value{
-				Type:      parser.String,
-				StringVal: &strVal,
-			}
-
-			return result, nil
-		}
-
-		firstOperand, err := Invoke(node.Params[0])
-
-		if err != nil {
-			return nil, err
-		}
-
-		secondOperand, err := Invoke(node.Params[1])
-
-		if err != nil {
-			return nil, err
-		}
-
-		switch operationName {
-		case "+":
-			result, err = firstOperand.Add(secondOperand)
-		case "-":
-			result, err = firstOperand.Subtract(secondOperand)
-		case "*":
-			result, err = firstOperand.Multiply(secondOperand)
-		case "/":
-			result, err = firstOperand.Divide(secondOperand)
-		case "^":
-			result, err = firstOperand.Power(secondOperand)
-		default:
-			return nil, fmt.Errorf(`operand type "%s" is not supported`, node.Value)
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		return result, nil
+		return operation(node, Invoke)
 	}
 
 	return nil, fmt.Errorf(`onexpected operation %s`, node.Value)

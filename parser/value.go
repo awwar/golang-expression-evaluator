@@ -40,13 +40,11 @@ func (v *Value) TypeAsString() string {
 func (v *Value) Add(rv *Value) (*Value, error) {
 	if v.Type == String || rv.Type == String {
 		leftValue, err := v.ToString()
-
 		if err != nil {
 			return nil, err
 		}
 
 		rightValue, err := rv.ToString()
-
 		if err != nil {
 			return nil, err
 		}
@@ -103,13 +101,11 @@ func (v *Value) Divide(rv *Value) (*Value, error) {
 	newValue := Value{Type: Float}
 
 	lVal, err := v.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rVal, err := rv.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
@@ -193,13 +189,11 @@ func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb fun
 	}
 
 	lVal, err := v.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rVal, err := rv.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}

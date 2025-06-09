@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	"expression_parser/parser"
 	"expression_parser/tokenizer"
 	"expression_parser/virtual_machine"
-	"fmt"
 )
 
 func main() {
@@ -15,7 +16,6 @@ func main() {
 	tokenizerMachine := tokenizer.New()
 
 	tokenStream, err := tokenizerMachine.ExpressionToStream(&expression)
-
 	if err != nil {
 		fmt.Println(err)
 
@@ -27,7 +27,6 @@ func main() {
 	parseMachine := parser.NewFromStream(tokenStream)
 
 	tree, parseError := parseMachine.Parse()
-
 	if parseError != nil {
 		parseError.EnrichWithExpression(&expression)
 
@@ -51,7 +50,6 @@ func main() {
 	fmt.Println(root.String(0))
 
 	result, err := virtual_machine.Invoke(root)
-
 	if err != nil {
 		fmt.Println(err)
 

@@ -39,6 +39,7 @@ func UnsignedMultiplication(list TransformableNodeList) (bool, *Error) {
 
 // ValueNegation 1 + - 1 -> 1 + -1
 func ValueNegation(list TransformableNodeList) (bool, *Error) {
+	leftLeftNode := list.LeftLeft()
 	leftNode := list.Left()
 	currentNode := list.Current()
 
@@ -46,7 +47,9 @@ func ValueNegation(list TransformableNodeList) (bool, *Error) {
 		return false, nil
 	}
 
-	if !(currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && (list.LeftLeft() == nil || list.LeftLeft().IsMathematicalOperation())) {
+	var isAllowedLeftBound = leftLeftNode == nil || leftLeftNode.IsMathematicalOperation()
+
+	if !(currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && isAllowedLeftBound) {
 		return false, nil
 	}
 

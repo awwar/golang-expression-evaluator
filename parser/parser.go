@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"expression_parser/tokenizer"
 	"fmt"
+
+	"expression_parser/tokenizer"
 )
 
 type Parser struct {
@@ -50,7 +51,6 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 			subParser := New(p.stream, p.currentPosition+1, p.lastPosition)
 
 			subNodes, err := subParser.Parse()
-
 			if err != nil {
 				return nil, err
 			}
@@ -68,7 +68,6 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 			p.currentPosition++
 
 			subNodes, err := p.subparseBracers()
-
 			if err != nil {
 				return nil, err
 			}
@@ -80,7 +79,6 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 
 		if token.Type == tokenizer.TypeBrackets {
 			subNodes, err := p.subparseBracers()
-
 			if err != nil {
 				return nil, err
 			}
@@ -154,7 +152,6 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 
 		for _, transformer := range transformers {
 			isReplaced, err := transformer(list)
-
 			if err != nil {
 				return nil, err
 			}
