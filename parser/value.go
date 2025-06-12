@@ -6,17 +6,19 @@ import (
 	"strconv"
 )
 
+type NodeValueType int
+
 const (
-	Integer = iota
-	Float   = iota
-	Atom    = iota
-	String  = iota
+	Integer NodeValueType = iota
+	Float                 = iota
+	Atom                  = iota
+	String                = iota
 )
 
-var MapTypeToTypeName = map[int]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}
+var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}
 
 type Value struct {
-	Type      int
+	Type      NodeValueType
 	StringVal *string
 	FloatVal  *float64
 	IntVal    *int64
@@ -33,6 +35,10 @@ func (v *Value) String() string {
 	return *asStringValue.StringVal
 }
 
+func (v *Value) GoString() string {
+	return v.String()
+}
+
 func (v *Value) TypeAsString() string {
 	return MapTypeToTypeName[v.Type]
 }
@@ -40,13 +46,11 @@ func (v *Value) TypeAsString() string {
 func (v *Value) Add(rv *Value) (*Value, error) {
 	if v.Type == String || rv.Type == String {
 		leftValue, err := v.ToString()
-
 		if err != nil {
 			return nil, err
 		}
 
 		rightValue, err := rv.ToString()
-
 		if err != nil {
 			return nil, err
 		}
@@ -103,13 +107,11 @@ func (v *Value) Divide(rv *Value) (*Value, error) {
 	newValue := Value{Type: Float}
 
 	lVal, err := v.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rVal, err := rv.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +136,14 @@ func (v *Value) Power(rv *Value) (*Value, error) {
 
 func (v *Value) IsNumber() bool {
 	return v.Type == Float || v.Type == Integer
+}
+
+func (v *Value) IsMinusOrPlus() bool {
+	if v.Type != Atom {
+		return false
+	}
+
+	return *v.StringVal == "-" || *v.StringVal == "+"
 }
 
 func (v *Value) ToFloat() (*Value, error) {
@@ -185,13 +195,11 @@ func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb fun
 	}
 
 	lVal, err := v.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}
 
 	rVal, err := rv.ToFloat()
-
 	if err != nil {
 		return nil, err
 	}

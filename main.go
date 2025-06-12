@@ -1,41 +1,45 @@
 package main
 
 import (
+	"fmt"
+
+	"expression_parser/compiler"
 	"expression_parser/parser"
 	"expression_parser/tokenizer"
 	"expression_parser/virtual_machine"
-	"fmt"
 )
 
 func main() {
-	expression := `"result = " + (1 + 2 * sum(3 + 4) / 5 + 6)`
+	expression := `"result = ".uppercase() + (-1 + -2sum(3.4, 4) / 5 + 6)`
 
 	fmt.Println(expression)
 
 	tokenizerMachine := tokenizer.New()
 
 	tokenStream, err := tokenizerMachine.ExpressionToStream(&expression)
-
 	if err != nil {
 		fmt.Println(err)
 
 		return
 	}
 
-	fmt.Println(tokenStream)
-
 	parseMachine := parser.NewFromStream(tokenStream)
 
-	tree, err := parseMachine.Parse()
+	tree, parseError := parseMachine.Parse()
+	if parseError != nil {
+		parseError.EnrichWithExpression(&expression)
 
-	if err != nil {
-		fmt.Println(err)
+		fmt.Println(parseError)
 
 		return
 	}
 
 	if len(tree) != 1 {
 		fmt.Println("All nodes must collapse in one node, got: ", len(tree))
+
+		for _, rt := range tree {
+			fmt.Println(rt.String(0))
+		}
 
 		return
 	}
@@ -44,8 +48,16 @@ func main() {
 
 	fmt.Println(root.String(0))
 
-	result, err := virtual_machine.Invoke(root)
+	compile := compiler.NewCompiler()
 
+	program, err := compile.Compile(root)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(program.String())
+
+	result, err := virtual_machine.Execute(*program)
 	if err != nil {
 		fmt.Println(err)
 

@@ -5,17 +5,18 @@ import (
 )
 
 var (
-	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true}
+	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true, ".": true}
 	bracers      = map[string]bool{"(": true, ")": true}
-	numbers      = "0123456789."
+	numbers      = "0123456789"
 	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
 	singleTokens = map[int]bool{TypeSemicolon: true, TypeBrackets: true, TypeOperation: true}
 )
 
 type Tokenizer struct {
-	LastType int
-	Value    string
-	Stream   TokenStream
+	LastType        int
+	Value           string
+	Stream          TokenStream
+	CurrentPosition int
 }
 
 func New() *Tokenizer {
@@ -25,6 +26,7 @@ func New() *Tokenizer {
 func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error) {
 	for i := 0; i < len(*expression); i++ {
 		char := string((*expression)[i])
+		t.CurrentPosition = i
 
 		if char == `"` {
 			if t.LastType == TypeString {
@@ -36,24 +38,17 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 			continue
 		} else if t.LastType == TypeString {
 		} else if char == " " {
+			t.changeTokenType(TypeEmpty)
 			continue
 		} else if strings.Contains(numbers, char) {
-			if t.LastType == TypeWord {
-				t.changeTokenType(TypeWord)
-			} else {
-				t.changeTokenType(TypeNumber)
-			}
-		} else if char == "," {
-			t.changeTokenType(TypeSemicolon)
+			t.changeTokenType(TypeNumber)
 		} else if operations[char] {
 			t.changeTokenType(TypeOperation)
+		} else if char == "," {
+			t.changeTokenType(TypeSemicolon)
 		} else if bracers[char] {
 			t.changeTokenType(TypeBrackets)
 		} else if strings.Contains(wordChars, char) {
-			if t.LastType == TypeNumber {
-				t.swapTokenType(TypeWord)
-			}
-
 			t.changeTokenType(TypeWord)
 		} else {
 			return nil, &TokenizeError{Position: i, Expression: expression}
@@ -73,7 +68,7 @@ func (t *Tokenizer) changeTokenType(newType int) {
 	}
 
 	if t.LastType != TypeEmpty {
-		t.Stream.Push(&Token{Value: t.Value, Type: t.LastType})
+		t.Stream.Push(&Token{Value: t.Value, Type: t.LastType, Position: t.CurrentPosition})
 	}
 
 	t.Value = ""

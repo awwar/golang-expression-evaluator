@@ -1,12 +1,10 @@
 package parser
 
 import (
-	"expression_parser/tokenizer"
 	"fmt"
-	"slices"
-)
 
-var OperationPriority = map[string]int{"+": 0, "-": 0, "*": 1, "/": 1, "^": 2}
+	"expression_parser/tokenizer"
+)
 
 type Parser struct {
 	firstPosition   int
@@ -14,6 +12,14 @@ type Parser struct {
 	currentPosition int
 
 	stream *tokenizer.TokenStream
+}
+
+var transformers = []Transformer{
+	UnsignedMultiplication,
+	ValueNegation,
+	SimpleMath,
+	FloatValue,
+	FunctionCalling,
 }
 
 func New(stream *tokenizer.TokenStream, firstPosition, lastPosition int) *Parser {
@@ -29,68 +35,85 @@ func NewFromStream(stream *tokenizer.TokenStream) *Parser {
 	return New(stream, 0, stream.Length()-1)
 }
 
-func (p *Parser) Parse() ([]*Node, error) {
-	var list []*Node
+func (p *Parser) Parse() ([]*Node, *Error) {
+	list := &NodeList{}
 
 	for {
 		token := p.stream.Get(p.currentPosition)
 
 		if token == nil {
-			return nil, fmt.Errorf("cant find token for position: %d", p.currentPosition)
+			lastToken := p.stream.Get(p.currentPosition - 1)
+
+			return nil, NewError(lastToken.Position, "cant find token")
+		}
+
+		if token.Type == tokenizer.TypeSemicolon {
+			subParser := New(p.stream, p.currentPosition+1, p.lastPosition)
+
+			subNodes, err := subParser.Parse()
+			if err != nil {
+				return nil, err
+			}
+
+			list.Push(subNodes...)
+
+			break
 		}
 
 		if token.Type == tokenizer.TypeWord {
 			if false == p.stream.NextTokenIsBracer(p.currentPosition) {
-				return nil, fmt.Errorf("word token uses only in function context: %d", p.currentPosition)
+				return nil, NewError(token.Position, "word token uses only in function context")
 			}
 
 			p.currentPosition++
 
 			subNodes, err := p.subparseBracers()
-
 			if err != nil {
 				return nil, err
 			}
 
-			node := CreateAsOperation(token.Value, subNodes, 0)
+			node := CreateAsOperation(token.Value, subNodes, token.Position)
 
-			list = append(list, node)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeBrackets {
 			subNodes, err := p.subparseBracers()
-
 			if err != nil {
 				return nil, err
 			}
 
 			if len(subNodes) != 1 {
-				return nil, fmt.Errorf("stand-alone brackets should frame exactly one node: %d", p.currentPosition)
+				for _, rt := range subNodes {
+					fmt.Println(rt.String(0))
+				}
+
+				return nil, NewError(token.Position-1, "stand-alone brackets should frame exactly one node")
 			}
 
 			subNode := subNodes[0]
 
 			subNode.SetPriority(0)
 
-			list = append(list, subNode)
+			list.Push(subNode)
 		}
 
 		if token.Type == tokenizer.TypeOperation {
-			operationNode := CreateAsOperation(token.Value, make([]*Node, 2), OperationPriority[token.Value])
+			node := CreateAsOperation(token.Value, make([]*Node, 2), token.Position)
 
-			list = append(list, operationNode)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			numberNode := CreateAsNumber(token.Value)
+			node := CreateAsNumber(token.Value, token.Position)
 
-			list = append(list, numberNode)
+			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeString {
-			numberNode := CreateAsString(token.Value)
+			node := CreateAsString(token.Value, token.Position)
 
-			list = append(list, numberNode)
+			list.Push(node)
 		}
 
 		if p.currentPosition == p.lastPosition {
@@ -100,63 +123,65 @@ func (p *Parser) Parse() ([]*Node, error) {
 		p.currentPosition++
 	}
 
-	targetPriority := 2
+	targetPriority := 4 + 1
 
 	for {
-		i := -1
-		for {
-			i++
+		list.Next()
 
-			if len(list) < 2 || i >= len(list) {
+		if list.IsEnd() {
+			list.Rewind()
+
+			if targetPriority == 0 {
 				break
 			}
 
-			item := list[i]
-
-			if item.GetPriority() != targetPriority {
-				continue
-			}
-
-			if item.IsFilled() {
-				continue
-			}
-
-			if i == 0 || i >= len(list) {
-				return nil, fmt.Errorf("cant use infix operator without left or right part at: %d", p.currentPosition)
-			}
-
-			item.SetSubNode(0, list[i-1])
-			item.SetSubNode(1, list[i+1])
-
-			list = slices.Replace(list, i-1, i+2, item)
-
-			i = i - 2
+			targetPriority--
 		}
 
-		if targetPriority == 0 {
-			break
+		currentNode := list.Current()
+
+		if currentNode.GetPriority() != targetPriority {
+			continue
 		}
 
-		targetPriority--
+		currentNode.Deprioritize()
+
+		if list.Left() == nil {
+			continue
+		}
+
+		for _, transformer := range transformers {
+			isReplaced, err := transformer(list)
+			if err != nil {
+				return nil, err
+			}
+
+			if isReplaced {
+				break
+			}
+		}
 	}
 
-	return list, nil
+	return list.Result(), nil
 }
 
-func (p *Parser) subparseBracers() ([]*Node, error) {
+func (p *Parser) subparseBracers() ([]*Node, *Error) {
 	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
 
 	if endPosition == -1 {
-		return nil, fmt.Errorf("cant find closed bracer for position: %d", p.currentPosition)
+		currentToken := p.stream.Get(p.currentPosition)
+
+		return nil, NewError(currentToken.Position, "cant find closed bracer")
 	}
 
-	if p.currentPosition == endPosition-1 {
-		return nil, nil
+	var subNodes []*Node
+	var err *Error
+
+	if p.currentPosition != endPosition-1 {
+		subParser := New(p.stream, p.currentPosition+1, endPosition-1)
+
+		subNodes, err = subParser.Parse()
 	}
-
-	subParser := New(p.stream, p.currentPosition+1, endPosition-1)
-
-	subNodes, err := subParser.Parse()
 
 	p.currentPosition = endPosition
 
