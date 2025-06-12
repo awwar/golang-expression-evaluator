@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"expression_parser/compiler"
 	"expression_parser/parser"
 	"expression_parser/tokenizer"
 	"expression_parser/virtual_machine"
@@ -21,8 +22,6 @@ func main() {
 
 		return
 	}
-
-	//fmt.Println(tokenStream)
 
 	parseMachine := parser.NewFromStream(tokenStream)
 
@@ -49,7 +48,16 @@ func main() {
 
 	fmt.Println(root.String(0))
 
-	result, err := virtual_machine.Invoke(root)
+	compile := compiler.NewCompiler()
+
+	program, err := compile.Compile(root)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(program.String())
+
+	result, err := virtual_machine.Execute(*program)
 	if err != nil {
 		fmt.Println(err)
 

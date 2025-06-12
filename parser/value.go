@@ -6,17 +6,19 @@ import (
 	"strconv"
 )
 
+type NodeValueType int
+
 const (
-	Integer = iota
-	Float   = iota
-	Atom    = iota
-	String  = iota
+	Integer NodeValueType = iota
+	Float                 = iota
+	Atom                  = iota
+	String                = iota
 )
 
-var MapTypeToTypeName = map[int]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}
+var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}
 
 type Value struct {
-	Type      int
+	Type      NodeValueType
 	StringVal *string
 	FloatVal  *float64
 	IntVal    *int64
@@ -31,6 +33,10 @@ func (v *Value) String() string {
 	}
 
 	return *asStringValue.StringVal
+}
+
+func (v *Value) GoString() string {
+	return v.String()
 }
 
 func (v *Value) TypeAsString() string {

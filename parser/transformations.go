@@ -128,7 +128,7 @@ func FunctionCalling(list TransformableNodeList) (bool, *Error) {
 	}
 
 	currentNode.Value = rightNode.Value
-	currentNode.PushNodeToHead(leftNode)
+	currentNode.SetOnlyChild(leftNode)
 
 	list.Replace(1, 2, currentNode)
 

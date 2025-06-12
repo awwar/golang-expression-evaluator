@@ -107,12 +107,8 @@ func (f *Node) SetSubNode(offset int, node *Node) {
 	f.Params[offset] = node
 }
 
-func (f *Node) PushNodeToHead(node *Node) {
-	if len(f.Params) == 0 {
-		f.Params = make([]*Node, 0)
-	}
-
-	f.Params = append([]*Node{node}, f.Params...)
+func (f *Node) SetOnlyChild(node *Node) {
+	f.Params = []*Node{node}
 }
 
 func (f *Node) Deprioritize() {
