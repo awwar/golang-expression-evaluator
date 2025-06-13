@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"expression_parser/parser"
 	"expression_parser/tokenizer"
 	"expression_parser/utility"
 )
@@ -19,30 +20,30 @@ func main() {
 
 	fmt.Println(tokenStream)
 
-	//parseMachine := expression.NewFromStream(tokenStream)
-	//
-	//tree, parseError := parseMachine.Parse()
-	//if parseError != nil {
-	//	parseError.EnrichWithExpression(&input)
-	//
-	//	fmt.Println(parseError)
-	//
-	//	return
-	//}
-	//
-	//if len(tree) != 1 {
-	//	fmt.Println("All nodes must collapse in one node, got: ", len(tree))
-	//
-	//	for _, rt := range tree {
-	//		fmt.Println(rt.String(0))
-	//	}
-	//
-	//	return
-	//}
-	//
-	//root := tree[0]
-	//
-	//fmt.Println(root.String(0))
+	parseMachine := parser.NewFromStream(tokenStream)
+
+	tree, parseError := parseMachine.ParseProgram()
+	if parseError != nil {
+		parseError.EnrichWithExpression(&tokenizerMachine.Expression)
+
+		fmt.Println(parseError)
+
+		return
+	}
+
+	if len(tree) != 1 {
+		fmt.Println("All nodes must collapse in one node, got: ", len(tree))
+
+		for _, rt := range tree {
+			fmt.Println(rt.String(0))
+		}
+
+		return
+	}
+
+	root := tree[0]
+
+	fmt.Println(root.String(0))
 	//
 	//compile := compiler.NewCompiler()
 	//

@@ -26,7 +26,7 @@ func (e *TokenizeError) Error() string {
 		nextNewLine = len(post)
 	}
 
-	expr := pre + post[:nextNewLine] + "\n" + strings.Repeat(" ", offset) + post[nextNewLine:] + "^"
+	expr := pre + post[:nextNewLine] + "\n" + strings.Repeat(" ", offset) + "^" + post[nextNewLine:]
 
 	return fmt.Sprintf("Invalid token at position %d \n%s", e.Position, expr)
 }

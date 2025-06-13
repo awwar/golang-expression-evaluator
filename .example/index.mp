@@ -1,12 +1,12 @@
 #MAIN
-VAR int(32) > $SOME_VALUE
+VAR $SOME_VALUE (int(32))
 
 IF (rand() > 0.5) #MORE #LESS
 
 #MORE
-OUT "you're WIN!"
+OUT ("you're WIN!")
 
 #LESS
-VAR (sum("you're lose ", $SOME_VALUE, " points")) > $OUT_RESULT
+VAR $OUT_RESULT (sum("you're lose ", $SOME_VALUE, " points"))
 
-OUT $OUT_RESULT&
+OUT ($OUT_RESULT)

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"expression_parser/parser/expression"
 )
 
 const (
@@ -13,14 +11,14 @@ const (
 	TypeConstant  = iota
 )
 
-var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, "^": 3, ".": 4}
+var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
 var StringPriority = 4
 var NumberPriority = 4
 var FunctionPriority = 4
 
 type Node struct {
 	Type          int
-	Value         *expression.Value
+	Value         *Value
 	Params        []*Node
 	Priority      int
 	TokenPosition int
@@ -29,8 +27,8 @@ type Node struct {
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
 	node := &Node{
 		Type: TypeOperation,
-		Value: &expression.Value{
-			Type:      expression.Atom,
+		Value: &Value{
+			Type:      Atom,
 			StringVal: &operation,
 		},
 		Params:        params,
@@ -46,17 +44,17 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
-	valueObject := expression.Value{}
+	valueObject := Value{}
 
 	if strings.Contains(value, ".") {
 		val, _ := strconv.ParseFloat(value, 64)
 
-		valueObject.Type = expression.Float
+		valueObject.Type = Float
 		valueObject.FloatVal = &val
 	} else {
 		val, _ := strconv.ParseInt(value, 0, 64)
 
-		valueObject.Type = expression.Integer
+		valueObject.Type = Integer
 		valueObject.IntVal = &val
 	}
 
@@ -72,8 +70,8 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeConstant,
-		Value: &expression.Value{
-			Type:      expression.String,
+		Value: &Value{
+			Type:      String,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),

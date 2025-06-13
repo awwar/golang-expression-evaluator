@@ -8,23 +8,34 @@ import (
 type Error struct {
 	Message    string
 	Position   int
-	Expression *string
+	Expression string
 }
 
 func NewError(position int, message string, params ...any) *Error {
-	return &Error{Position: position, Message: fmt.Sprintf(message, params...), Expression: nil}
+	return &Error{Position: position, Message: fmt.Sprintf(message, params...), Expression: ""}
 }
 
 func (e *Error) EnrichWithExpression(expression *string) {
-	e.Expression = expression
+	e.Expression = *expression
 }
 
 func (e *Error) Error() string {
-	expressionHint := ""
+	pre := e.Expression[:e.Position]
+	post := e.Expression[e.Position:]
 
-	if e.Expression != nil {
-		expressionHint = fmt.Sprintf("%s\n%s^", *e.Expression, strings.Repeat(" ", e.Position))
+	offset := strings.LastIndex(pre, "\n")
+	if offset == -1 {
+		offset = e.Position
+	} else {
+		offset = e.Position - offset - 1
 	}
 
-	return fmt.Sprintf("%s\n%s", e.Message, expressionHint)
+	nextNewLine := strings.Index(post, "\n")
+	if nextNewLine == -1 {
+		nextNewLine = len(post)
+	}
+
+	expr := pre + post[:nextNewLine] + "\n" + strings.Repeat(" ", offset) + "^" + post[nextNewLine:]
+
+	return fmt.Sprintf("%s\n%s", e.Message, expr)
 }
