@@ -1,4 +1,4 @@
-package parser
+package expression
 
 import (
 	"fmt"
@@ -10,9 +10,9 @@ type NodeValueType int
 
 const (
 	Integer NodeValueType = iota
-	Float                 = iota
-	Atom                  = iota
-	String                = iota
+	Float   NodeValueType = iota
+	Atom    NodeValueType = iota
+	String  NodeValueType = iota
 )
 
 var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}

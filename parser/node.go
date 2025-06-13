@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"expression_parser/parser/expression"
 )
 
 const (
@@ -18,7 +20,7 @@ var FunctionPriority = 4
 
 type Node struct {
 	Type          int
-	Value         *Value
+	Value         *expression.Value
 	Params        []*Node
 	Priority      int
 	TokenPosition int
@@ -27,8 +29,8 @@ type Node struct {
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
 	node := &Node{
 		Type: TypeOperation,
-		Value: &Value{
-			Type:      Atom,
+		Value: &expression.Value{
+			Type:      expression.Atom,
 			StringVal: &operation,
 		},
 		Params:        params,
@@ -44,17 +46,17 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
-	valueObject := Value{}
+	valueObject := expression.Value{}
 
 	if strings.Contains(value, ".") {
 		val, _ := strconv.ParseFloat(value, 64)
 
-		valueObject.Type = Float
+		valueObject.Type = expression.Float
 		valueObject.FloatVal = &val
 	} else {
 		val, _ := strconv.ParseInt(value, 0, 64)
 
-		valueObject.Type = Integer
+		valueObject.Type = expression.Integer
 		valueObject.IntVal = &val
 	}
 
@@ -70,8 +72,8 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeConstant,
-		Value: &Value{
-			Type:      String,
+		Value: &expression.Value{
+			Type:      expression.String,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),

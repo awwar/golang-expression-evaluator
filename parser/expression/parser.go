@@ -1,8 +1,9 @@
-package parser
+package expression
 
 import (
 	"fmt"
 
+	"expression_parser/parser"
 	"expression_parser/tokenizer"
 )
 
@@ -35,8 +36,8 @@ func NewFromStream(stream *tokenizer.TokenStream) *Parser {
 	return New(stream, 0, stream.Length()-1)
 }
 
-func (p *Parser) Parse() ([]*Node, *Error) {
-	list := &NodeList{}
+func (p *Parser) Parse() ([]*parser.Node, *parser.Error) {
+	list := &parser.NodeList{}
 
 	for {
 		token := p.stream.Get(p.currentPosition)
@@ -44,7 +45,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 		if token == nil {
 			lastToken := p.stream.Get(p.currentPosition - 1)
 
-			return nil, NewError(lastToken.Position, "cant find token")
+			return nil, parser.NewError(lastToken.Position, "cant find token")
 		}
 
 		if token.Type == tokenizer.TypeSemicolon {
@@ -62,7 +63,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 
 		if token.Type == tokenizer.TypeWord {
 			if false == p.stream.NextTokenIsBracer(p.currentPosition) {
-				return nil, NewError(token.Position, "word token uses only in function context")
+				return nil, parser.NewError(token.Position, "word token uses only in function context")
 			}
 
 			p.currentPosition++
@@ -72,7 +73,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 				return nil, err
 			}
 
-			node := CreateAsOperation(token.Value, subNodes, token.Position)
+			node := parser.CreateAsOperation(token.Value, subNodes, token.Position)
 
 			list.Push(node)
 		}
@@ -88,7 +89,7 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 					fmt.Println(rt.String(0))
 				}
 
-				return nil, NewError(token.Position-1, "stand-alone brackets should frame exactly one node")
+				return nil, parser.NewError(token.Position-1, "stand-alone brackets should frame exactly one node")
 			}
 
 			subNode := subNodes[0]
@@ -99,19 +100,19 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 		}
 
 		if token.Type == tokenizer.TypeOperation {
-			node := CreateAsOperation(token.Value, make([]*Node, 2), token.Position)
+			node := parser.CreateAsOperation(token.Value, make([]*parser.Node, 2), token.Position)
 
 			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeNumber {
-			node := CreateAsNumber(token.Value, token.Position)
+			node := parser.CreateAsNumber(token.Value, token.Position)
 
 			list.Push(node)
 		}
 
 		if token.Type == tokenizer.TypeString {
-			node := CreateAsString(token.Value, token.Position)
+			node := parser.CreateAsString(token.Value, token.Position)
 
 			list.Push(node)
 		}
@@ -165,17 +166,17 @@ func (p *Parser) Parse() ([]*Node, *Error) {
 	return list.Result(), nil
 }
 
-func (p *Parser) subparseBracers() ([]*Node, *Error) {
+func (p *Parser) subparseBracers() ([]*parser.Node, *parser.Error) {
 	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
 
 	if endPosition == -1 {
 		currentToken := p.stream.Get(p.currentPosition)
 
-		return nil, NewError(currentToken.Position, "cant find closed bracer")
+		return nil, parser.NewError(currentToken.Position, "cant find closed bracer")
 	}
 
-	var subNodes []*Node
-	var err *Error
+	var subNodes []*parser.Node
+	var err *parser.Error
 
 	if p.currentPosition != endPosition-1 {
 		subParser := New(p.stream, p.currentPosition+1, endPosition-1)

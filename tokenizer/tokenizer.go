@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true, ".": true}
+	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true, ".": true, ">": true, "<": true, "=": true}
 	bracers      = map[string]bool{"(": true, ")": true}
 	numbers      = "0123456789"
-	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$#"
 	singleTokens = map[int]bool{TypeSemicolon: true, TypeBrackets: true, TypeOperation: true}
 )
 
@@ -17,6 +17,7 @@ type Tokenizer struct {
 	Value           string
 	Stream          TokenStream
 	CurrentPosition int
+	Expression      string
 }
 
 func New() *Tokenizer {
@@ -24,8 +25,10 @@ func New() *Tokenizer {
 }
 
 func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error) {
-	for i := 0; i < len(*expression); i++ {
-		char := string((*expression)[i])
+	t.setExpression(expression)
+
+	for i := 0; i < len(t.Expression); i++ {
+		char := string((t.Expression)[i])
 		t.CurrentPosition = i
 
 		if char == `"` {
@@ -37,7 +40,7 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 
 			continue
 		} else if t.LastType == TypeString {
-		} else if char == " " {
+		} else if char == " " || char == "\n" || char == "\r" {
 			t.changeTokenType(TypeEmpty)
 			continue
 		} else if strings.Contains(numbers, char) {
@@ -51,7 +54,7 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 		} else if strings.Contains(wordChars, char) {
 			t.changeTokenType(TypeWord)
 		} else {
-			return nil, &TokenizeError{Position: i, Expression: expression}
+			return nil, &TokenizeError{Position: i, Expression: t.Expression}
 		}
 
 		t.Value = t.Value + char
@@ -77,4 +80,16 @@ func (t *Tokenizer) changeTokenType(newType int) {
 
 func (t *Tokenizer) swapTokenType(newType int) {
 	t.LastType = newType
+}
+
+func (t *Tokenizer) setExpression(expression *string) {
+	if expression == nil {
+		return
+	}
+	e := ""
+
+	e = strings.TrimSpace(*expression)
+	e = strings.ReplaceAll(e, "\r", "")
+
+	t.Expression = e
 }

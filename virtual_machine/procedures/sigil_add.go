@@ -3,11 +3,11 @@ package procedures
 import (
 	"errors"
 
-	"expression_parser/parser"
+	"expression_parser/parser/expression"
 	"expression_parser/utility"
 )
 
-func SigilAdd(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilAdd(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error) {
 	if argc != 2 {
 		return nil, errors.New("sigil add: wrong number of arguments")
 	}

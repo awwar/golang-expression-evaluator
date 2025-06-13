@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"expression_parser/compiler"
-	"expression_parser/parser"
+	"expression_parser/parser/expression"
 	"expression_parser/utility"
 	"expression_parser/virtual_machine/procedures"
 )
@@ -22,11 +22,11 @@ var (
 	}
 )
 
-type Operation func(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error)
+type Operation func(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error)
 
-func Execute(program compiler.Program) (*parser.Value, error) {
+func Execute(program compiler.Program) (*expression.Value, error) {
 	ops := program.Read()
-	stack := utility.NewStack[parser.Value]()
+	stack := utility.NewStack[expression.Value]()
 
 	opI := 0
 	for {
@@ -57,7 +57,7 @@ func Execute(program compiler.Program) (*parser.Value, error) {
 			}
 			stack.Push(value)
 		case compiler.PUSH:
-			v, ok := op.Params[0].(parser.Value)
+			v, ok := op.Params[0].(expression.Value)
 			if !ok {
 				return nil, fmt.Errorf("PUSH param is not a *value\n")
 			}
