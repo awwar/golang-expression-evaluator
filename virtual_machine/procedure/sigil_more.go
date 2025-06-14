@@ -11,20 +11,27 @@ func init() {
 	AppendOperation(">", SigilMore)
 }
 
-func SigilMore(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilMore(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 2 {
-		return nil, errors.New("sigil more: wrong number of arguments")
+		return errors.New("sigil more: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return firstOperand.More(secondOperand)
+	newV, err := firstOperand.More(secondOperand)
+	if err != nil {
+		return err
+	}
+
+	stack.Push(newV)
+
+	return nil
 }

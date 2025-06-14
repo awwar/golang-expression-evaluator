@@ -11,20 +11,27 @@ func init() {
 	AppendOperation("-", SigilSubstract)
 }
 
-func SigilSubstract(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilSubstract(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 2 {
-		return nil, errors.New("sigil substract: wrong number of arguments")
+		return errors.New("sigil substract: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return firstOperand.Subtract(secondOperand)
+	newV, err := firstOperand.Subtract(secondOperand)
+	if err != nil {
+		return err
+	}
+
+	stack.Push(newV)
+
+	return nil
 }

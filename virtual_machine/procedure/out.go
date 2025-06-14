@@ -11,23 +11,22 @@ func init() {
 	AppendOperation("OUT", Out)
 }
 
-func Out(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func Out(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 1 {
-		return nil, fmt.Errorf("OUT() accepted only one argument")
+		return fmt.Errorf("OUT() accepted only one argument")
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	operandAsString, err := firstOperand.ToString()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &parser.Value{
-		Type:      parser.String,
-		StringVal: utility.AsPtr(fmt.Sprintf("%s", *operandAsString.StringVal)),
-	}, nil
+	fmt.Printf("%s", *operandAsString.StringVal)
+
+	return nil
 }

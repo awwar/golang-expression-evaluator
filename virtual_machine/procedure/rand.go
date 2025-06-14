@@ -12,15 +12,12 @@ func init() {
 	AppendOperation("rand", Rand)
 }
 
-func Rand(argc int, _ *utility.Stack[parser.Value]) (*parser.Value, error) {
+func Rand(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 0 {
-		return nil, fmt.Errorf("rand() not accepted any argument")
+		return fmt.Errorf("rand() not accepted any argument")
 	}
 
-	return &parser.Value{
-		Type:      parser.Float,
-		StringVal: nil,
-		FloatVal:  utility.AsPtr(rand.Float64()),
-		IntVal:    nil,
-	}, nil
+	stack.Push(&parser.Value{Type: parser.Float, FloatVal: utility.AsPtr(rand.Float64())})
+
+	return nil
 }

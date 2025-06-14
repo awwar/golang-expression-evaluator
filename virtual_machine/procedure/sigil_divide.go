@@ -11,20 +11,27 @@ func init() {
 	AppendOperation("/", SigilDivide)
 }
 
-func SigilDivide(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilDivide(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 2 {
-		return nil, errors.New("sigil divide: wrong number of arguments")
+		return errors.New("sigil divide: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return firstOperand.Divide(secondOperand)
+	newV, err := firstOperand.Divide(secondOperand)
+	if err != nil {
+		return err
+	}
+
+	stack.Push(newV)
+
+	return nil
 }

@@ -12,20 +12,19 @@ func init() {
 	AppendOperation("trim_space", TrimSpace)
 }
 
-func TrimSpace(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func TrimSpace(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 1 {
-		return nil, errors.New("sigil add: wrong number of arguments")
+		return errors.New("sigil add: wrong number of arguments")
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	strVal := strings.TrimSpace(*firstOperand.StringVal)
 
-	return &parser.Value{
-		Type:      parser.String,
-		StringVal: &strVal,
-	}, nil
+	stack.Push(&parser.Value{Type: parser.String, StringVal: &strVal})
+
+	return nil
 }

@@ -9,12 +9,13 @@ func init() {
 	AppendOperation("sum", Sum)
 }
 
-func Sum(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func Sum(argc int, stack *utility.Stack[parser.Value]) error {
 	var result *parser.Value
+
 	for i := 0; i < argc; i++ {
 		operand, err := stack.Pop()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if result == nil {
 			result = operand
@@ -24,9 +25,11 @@ func Sum(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 
 		result, err = operand.Add(result)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return result, nil
+	stack.Push(result)
+
+	return nil
 }

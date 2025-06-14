@@ -46,3 +46,11 @@ func Must[T any](val T, err error) T {
 
 	return val
 }
+
+func MustVoid(err error) {
+	if err != nil {
+		fmt.Printf("%v\n", err)
+
+		os.Exit(1)
+	}
+}

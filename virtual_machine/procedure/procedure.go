@@ -13,4 +13,4 @@ func AppendOperation(name string, op Procedure) {
 	ProceduresMap[name] = op
 }
 
-type Procedure func(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error)
+type Procedure func(argc int, stack *utility.Stack[parser.Value]) error

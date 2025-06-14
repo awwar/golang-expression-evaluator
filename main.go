@@ -18,7 +18,7 @@ func main() {
 
 	tokenStream := utility.Must(tokenizer.New().ExpressionToStream(&input))
 
-	fmt.Println(tokenStream)
+	//fmt.Println(tokenStream)
 
 	tree := utility.Must(parser.NewFromStream(tokenStream).ParseProgram())
 
@@ -28,7 +28,5 @@ func main() {
 
 	fmt.Println(program.String())
 
-	result := utility.Must(virtual_machine.Execute(*program))
-
-	fmt.Printf("%s", result)
+	utility.MustVoid(virtual_machine.Execute(*program))
 }

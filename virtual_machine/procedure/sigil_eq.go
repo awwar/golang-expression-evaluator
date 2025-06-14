@@ -11,20 +11,27 @@ func init() {
 	AppendOperation("=", SigilEq)
 }
 
-func SigilEq(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilEq(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 2 {
-		return nil, errors.New("sigil eq: wrong number of arguments")
+		return errors.New("sigil eq: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	firstOperand, err := stack.Pop()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return firstOperand.Eq(secondOperand)
+	newV, err := firstOperand.Eq(secondOperand)
+	if err != nil {
+		return err
+	}
+
+	stack.Push(newV)
+
+	return nil
 }
