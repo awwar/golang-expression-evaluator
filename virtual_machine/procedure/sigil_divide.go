@@ -13,7 +13,7 @@ func init() {
 
 func SigilDivide(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 2 {
-		return nil, errors.New("sigil add: wrong number of arguments")
+		return nil, errors.New("sigil divide: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()

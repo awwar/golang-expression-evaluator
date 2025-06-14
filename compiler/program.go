@@ -13,6 +13,7 @@ const (
 	PUSH OperationName = iota
 	CALL OperationName = iota
 	MARK OperationName = iota
+	IF   OperationName = iota
 	VAR  OperationName = iota
 )
 
@@ -58,7 +59,7 @@ func (p *Program) NewVariable(name parser.Value) {
 
 func (p *Program) NewIf(ifTrue parser.Value, ifFalse parser.Value) {
 	p.operations = append(p.operations, &Operations{
-		Name:     VAR,
+		Name:     IF,
 		Params:   []any{ifTrue, ifFalse},
 		Describe: func() string { return fmt.Sprintf("IF %s %s", ifTrue.GoString(), ifFalse.GoString()) },
 	})

@@ -16,14 +16,13 @@ func Sum(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		if result == nil {
 			result = operand
 
 			continue
 		}
 
-		result, err = result.Add(operand)
+		result, err = operand.Add(result)
 		if err != nil {
 			return nil, err
 		}

@@ -13,7 +13,7 @@ func init() {
 
 func SigilMore(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 2 {
-		return nil, errors.New("sigil add: wrong number of arguments")
+		return nil, errors.New("sigil more: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
@@ -26,5 +26,5 @@ func SigilMore(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, err
 		return nil, err
 	}
 
-	return firstOperand.Add(secondOperand)
+	return firstOperand.More(secondOperand)
 }

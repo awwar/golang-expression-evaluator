@@ -13,7 +13,7 @@ func init() {
 
 func SigilSubstract(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 2 {
-		return nil, errors.New("sigil add: wrong number of arguments")
+		return nil, errors.New("sigil substract: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()

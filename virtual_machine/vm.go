@@ -12,8 +12,9 @@ import (
 func Execute(program compiler.Program) (*parser.Value, error) {
 	ops := program.Read()
 	stack := utility.NewStack[parser.Value]()
+	context := map[string]*parser.Value{}
 
-	opI := 0
+	opI := getIndexOfMark(ops, "#MAIN") + 1
 	for {
 		if opI > len(ops)-1 {
 			break
@@ -22,6 +23,8 @@ func Execute(program compiler.Program) (*parser.Value, error) {
 		opI++
 
 		switch op.Name {
+		case compiler.MARK:
+			opI = len(ops)
 		case compiler.CALL:
 			procedureName, ok := op.Params[0].(string)
 			if !ok {
@@ -46,7 +49,42 @@ func Execute(program compiler.Program) (*parser.Value, error) {
 			if !ok {
 				return nil, fmt.Errorf("PUSH param is not a *value\n")
 			}
-			stack.Push(&v)
+			if v.Type == parser.Atom {
+				stack.Push(context[*v.StringVal])
+			} else {
+				stack.Push(&v)
+			}
+		case compiler.VAR:
+			v, ok := op.Params[0].(parser.Value)
+			if !ok {
+				return nil, fmt.Errorf("PUSH param is not a *value\n")
+			}
+			operand, err := stack.Pop()
+			if err != nil {
+				return nil, err
+			}
+			context[*v.StringVal] = operand
+		case compiler.IF:
+			operand, err := stack.Pop()
+			if err != nil {
+				return nil, err
+			}
+			if operand.Type != parser.Boolean {
+				return nil, fmt.Errorf("IF condition is not a boolean\n")
+			}
+			if operand.BoolVal {
+				trueMark, ok := op.Params[0].(parser.Value)
+				if !ok {
+					return nil, fmt.Errorf("PUSH param is not a *value\n")
+				}
+				opI = getIndexOfMark(ops, *trueMark.StringVal) + 1
+			} else {
+				falseMark, ok := op.Params[1].(parser.Value)
+				if !ok {
+					return nil, fmt.Errorf("PUSH param is not a *value\n")
+				}
+				opI = getIndexOfMark(ops, *falseMark.StringVal) + 1
+			}
 		}
 	}
 
@@ -55,5 +93,26 @@ func Execute(program compiler.Program) (*parser.Value, error) {
 		return nil, fmt.Errorf("stack.Top() returns error: %v\n", err)
 	}
 
+	if !stack.IsEmpty() {
+		return nil, fmt.Errorf("after work stack is not empty\n")
+	}
+
 	return v, nil
+}
+
+func getIndexOfMark(ops []*compiler.Operations, mark string) int {
+	for i, op := range ops {
+		if op.Name == compiler.MARK {
+			markName, ok := op.Params[0].(parser.Value)
+			if !ok {
+				return -1
+			}
+
+			if *markName.StringVal == mark {
+				return i
+			}
+		}
+	}
+
+	return -1
 }

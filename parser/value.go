@@ -73,6 +73,42 @@ func (v *Value) Add(rv *Value) (*Value, error) {
 	)
 }
 
+func (v *Value) More(rv *Value) (*Value, error) {
+	if !v.IsNumber() || !rv.IsNumber() {
+		return nil, fmt.Errorf("unable to > with %s to %s", v.TypeAsString(), rv.TypeAsString())
+	}
+
+	return v.cmp(
+		rv,
+		func(v1 float64, v2 float64) bool { return v1 > v2 },
+		func(v1 int64, v2 int64) bool { return v1 > v2 },
+	)
+}
+
+func (v *Value) Less(rv *Value) (*Value, error) {
+	if !v.IsNumber() || !rv.IsNumber() {
+		return nil, fmt.Errorf("unable to < with %s to %s", v.TypeAsString(), rv.TypeAsString())
+	}
+
+	return v.cmp(
+		rv,
+		func(v1 float64, v2 float64) bool { return v1 < v2 },
+		func(v1 int64, v2 int64) bool { return v1 < v2 },
+	)
+}
+
+func (v *Value) Eq(rv *Value) (*Value, error) {
+	if !v.IsNumber() || !rv.IsNumber() {
+		return nil, fmt.Errorf("unable to = with %s to %s", v.TypeAsString(), rv.TypeAsString())
+	}
+
+	return v.cmp(
+		rv,
+		func(v1 float64, v2 float64) bool { return v1 == v2 },
+		func(v1 int64, v2 int64) bool { return v1 == v2 },
+	)
+}
+
 func (v *Value) Subtract(rv *Value) (*Value, error) {
 	if !v.IsNumber() || !rv.IsNumber() {
 		return nil, fmt.Errorf("unable to substract %s from %s", v.TypeAsString(), rv.TypeAsString())
@@ -208,6 +244,33 @@ func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb fun
 
 	rez := fCb(*lVal.FloatVal, *rVal.FloatVal)
 	newValue.FloatVal = &rez
+
+	return &newValue, nil
+}
+
+func (v *Value) cmp(rv *Value, fCb func(float64, float64) bool, iCb func(int64, int64) bool) (*Value, error) {
+	newValue := Value{Type: Boolean}
+
+	if v.Type == Integer && rv.Type == Integer {
+		newValue.Type = Integer
+		lVal := *v.IntVal
+		rVal := *rv.IntVal
+		newValue.BoolVal = iCb(lVal, rVal)
+
+		return &newValue, nil
+	}
+
+	lVal, err := v.ToFloat()
+	if err != nil {
+		return nil, err
+	}
+
+	rVal, err := rv.ToFloat()
+	if err != nil {
+		return nil, err
+	}
+
+	newValue.BoolVal = fCb(*lVal.FloatVal, *rVal.FloatVal)
 
 	return &newValue, nil
 }

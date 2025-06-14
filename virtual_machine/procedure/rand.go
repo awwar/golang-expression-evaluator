@@ -14,7 +14,7 @@ func init() {
 
 func Rand(argc int, _ *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 0 {
-		return nil, fmt.Errorf("rand() accepted only one argument")
+		return nil, fmt.Errorf("rand() not accepted any argument")
 	}
 
 	return &parser.Value{

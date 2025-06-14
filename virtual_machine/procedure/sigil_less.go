@@ -8,12 +8,12 @@ import (
 )
 
 func init() {
-	AppendOperation("*", SigilMultiply)
+	AppendOperation("<", SigilLess)
 }
 
-func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func SigilLess(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 2 {
-		return nil, errors.New("sigil multiply: wrong number of arguments")
+		return nil, errors.New("sigil less: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
@@ -26,5 +26,5 @@ func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) (*parser.Value,
 		return nil, err
 	}
 
-	return firstOperand.Multiply(secondOperand)
+	return firstOperand.Less(secondOperand)
 }
