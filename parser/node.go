@@ -14,6 +14,7 @@ const (
 	TypeVariable        = iota
 	TypeFlowLink        = iota
 	TypeFlowDeclaration = iota
+	TypeProgram         = iota
 )
 
 var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
@@ -24,6 +25,22 @@ type Node struct {
 	Params        []*Node
 	Priority      int
 	TokenPosition int
+}
+
+func CreateAsProgram(params []*Node) *Node {
+	name := "root"
+	node := &Node{
+		Type: TypeProgram,
+		Value: &Value{
+			Type:      Atom,
+			StringVal: &name,
+		},
+		Params:        params,
+		Priority:      4,
+		TokenPosition: 0,
+	}
+
+	return node
 }
 
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"expression_parser/compiler"
-	"expression_parser/parser/expression"
+	"expression_parser/parser"
 	"expression_parser/utility"
 	"expression_parser/virtual_machine/procedures"
 )
@@ -12,6 +12,7 @@ import (
 var (
 	proceduresMap = map[string]Operation{
 		"sum":        procedures.Sum,
+		"rand":       procedures.Rand,
 		"uppercase":  procedures.Uppercase,
 		"trim_space": procedures.TrimSpace,
 		"+":          procedures.SigilAdd,
@@ -22,11 +23,11 @@ var (
 	}
 )
 
-type Operation func(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error)
+type Operation func(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error)
 
-func Execute(program compiler.Program) (*expression.Value, error) {
+func Execute(program compiler.Program) (*parser.Value, error) {
 	ops := program.Read()
-	stack := utility.NewStack[expression.Value]()
+	stack := utility.NewStack[parser.Value]()
 
 	opI := 0
 	for {
@@ -57,7 +58,7 @@ func Execute(program compiler.Program) (*expression.Value, error) {
 			}
 			stack.Push(value)
 		case compiler.PUSH:
-			v, ok := op.Params[0].(expression.Value)
+			v, ok := op.Params[0].(parser.Value)
 			if !ok {
 				return nil, fmt.Errorf("PUSH param is not a *value\n")
 			}

@@ -1,12 +1,12 @@
 package procedures
 
 import (
-	"expression_parser/parser/expression"
+	"expression_parser/parser"
 	"expression_parser/utility"
 )
 
-func Sum(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error) {
-	var result *expression.Value
+func Sum(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+	var result *parser.Value
 	for i := 0; i < argc; i++ {
 		operand, err := stack.Pop()
 		if err != nil {

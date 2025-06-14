@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"expression_parser/parser/expression"
+	"expression_parser/parser"
 )
 
 type OperationName int
@@ -30,7 +30,7 @@ type Program struct {
 	operations []*Operations
 }
 
-func (p *Program) NewPush(value expression.Value) {
+func (p *Program) NewPush(value parser.Value) {
 	p.operations = append(p.operations, &Operations{
 		Name:     PUSH,
 		Params:   []any{value},

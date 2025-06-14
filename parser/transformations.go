@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type Transformer func(list TransformableNodeList) (bool, *Error)
+type Transformer func(list TransformableNodeList) (bool, error)
 
 type TransformableNodeList interface {
 	Current() *Node
@@ -16,7 +16,7 @@ type TransformableNodeList interface {
 }
 
 // UnsignedMultiplication 2 sin(20) -> (2 * sin(20))
-func UnsignedMultiplication(list TransformableNodeList) (bool, *Error) {
+func UnsignedMultiplication(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 
@@ -40,7 +40,7 @@ func UnsignedMultiplication(list TransformableNodeList) (bool, *Error) {
 }
 
 // ValueNegation 1 + - 1 -> 1 + -1
-func ValueNegation(list TransformableNodeList) (bool, *Error) {
+func ValueNegation(list TransformableNodeList) (bool, error) {
 	leftLeftNode := list.LeftLeft()
 	leftNode := list.Left()
 	currentNode := list.Current()
@@ -68,7 +68,7 @@ func ValueNegation(list TransformableNodeList) (bool, *Error) {
 	return true, nil
 }
 
-func SimpleMath(list TransformableNodeList) (bool, *Error) {
+func SimpleMath(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -89,7 +89,7 @@ func SimpleMath(list TransformableNodeList) (bool, *Error) {
 	return true, nil
 }
 
-func FloatValue(list TransformableNodeList) (bool, *Error) {
+func FloatValue(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -116,7 +116,7 @@ func FloatValue(list TransformableNodeList) (bool, *Error) {
 	return true, nil
 }
 
-func FunctionCalling(list TransformableNodeList) (bool, *Error) {
+func FunctionCalling(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -137,7 +137,7 @@ func FunctionCalling(list TransformableNodeList) (bool, *Error) {
 	return true, nil
 }
 
-func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, *Error) {
+func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 	operation := *operationNode.Value.StringVal
 
 	if operation == "+" {
@@ -145,7 +145,7 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, *Error) 
 	}
 
 	if operation != "-" {
-		return nil, NewError(operationNode.TokenPosition, "unable to negate node with operation %s", operation)
+		return nil, fmt.Errorf("unable to negate node with operation %s", operation)
 	}
 
 	if operandNode.IsNumber() {
@@ -160,13 +160,13 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, *Error) 
 		multipliedValue, err := operandNode.Value.Multiply(&value)
 
 		if err != nil {
-			return nil, NewError(operationNode.TokenPosition, "negation value error: %s", err)
+			return nil, fmt.Errorf("negation value error: %s", err)
 		}
 
 		stringVal, err := multipliedValue.ToString()
 
 		if err != nil {
-			return nil, NewError(operationNode.TokenPosition, "negation value error: %s", err)
+			return nil, fmt.Errorf("negation value error: %s", err)
 		}
 
 		numberNode := CreateAsNumber(*stringVal.StringVal, operandNode.TokenPosition)

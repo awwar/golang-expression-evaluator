@@ -4,11 +4,11 @@ import (
 	"errors"
 	"strings"
 
-	"expression_parser/parser/expression"
+	"expression_parser/parser"
 	"expression_parser/utility"
 )
 
-func Uppercase(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error) {
+func Uppercase(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 1 {
 		return nil, errors.New("sigil add: wrong number of arguments")
 	}
@@ -20,8 +20,8 @@ func Uppercase(argc int, stack *utility.Stack[expression.Value]) (*expression.Va
 
 	strVal := strings.ToUpper(*firstOperand.StringVal)
 
-	return &expression.Value{
-		Type:      expression.String,
+	return &parser.Value{
+		Type:      parser.String,
 		StringVal: &strVal,
 	}, nil
 }
