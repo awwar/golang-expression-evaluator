@@ -1,4 +1,4 @@
-package procedures
+package procedure
 
 import (
 	"errors"
@@ -7,7 +7,11 @@ import (
 	"expression_parser/utility"
 )
 
-func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
+func init() {
+	AppendOperation("^", SigilPower)
+}
+
+func SigilPower(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 2 {
 		return nil, errors.New("sigil add: wrong number of arguments")
 	}
@@ -22,5 +26,5 @@ func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) (*parser.Value,
 		return nil, err
 	}
 
-	return firstOperand.Multiply(secondOperand)
+	return firstOperand.Power(secondOperand)
 }

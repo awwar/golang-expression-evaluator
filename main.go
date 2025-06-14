@@ -14,17 +14,21 @@ import (
 func main() {
 	input := string(utility.Must(os.ReadFile(".example/index.mp")))
 
+	//fmt.Println(input)
+
 	tokenStream := utility.Must(tokenizer.New().ExpressionToStream(&input))
+
+	fmt.Println(tokenStream)
 
 	tree := utility.Must(parser.NewFromStream(tokenStream).ParseProgram())
 
+	fmt.Println(tree.String(0))
+
 	program := utility.Must(compiler.NewCompiler().Compile(tree))
+
+	fmt.Println(program.String())
 
 	result := utility.Must(virtual_machine.Execute(*program))
 
-	//fmt.Println(input)
-	fmt.Println(tokenStream)
-	fmt.Println(tree.String(0))
-	fmt.Println(program.String())
 	fmt.Printf("%s", result)
 }

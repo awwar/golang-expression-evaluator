@@ -12,13 +12,15 @@ const (
 	Integer NodeValueType = iota
 	Float   NodeValueType = iota
 	Atom    NodeValueType = iota
+	Boolean NodeValueType = iota
 	String  NodeValueType = iota
 )
 
-var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string"}
+var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string", Boolean: "bool"}
 
 type Value struct {
 	Type      NodeValueType
+	BoolVal   bool
 	StringVal *string
 	FloatVal  *float64
 	IntVal    *int64

@@ -1,4 +1,4 @@
-package procedures
+package procedure
 
 import (
 	"fmt"
@@ -7,6 +7,10 @@ import (
 	"expression_parser/parser"
 	"expression_parser/utility"
 )
+
+func init() {
+	AppendOperation("rand", Rand)
+}
 
 func Rand(argc int, _ *utility.Stack[parser.Value]) (*parser.Value, error) {
 	if argc != 0 {

@@ -6,24 +6,8 @@ import (
 	"expression_parser/compiler"
 	"expression_parser/parser"
 	"expression_parser/utility"
-	"expression_parser/virtual_machine/procedures"
+	"expression_parser/virtual_machine/procedure"
 )
-
-var (
-	proceduresMap = map[string]Operation{
-		"sum":        procedures.Sum,
-		"rand":       procedures.Rand,
-		"uppercase":  procedures.Uppercase,
-		"trim_space": procedures.TrimSpace,
-		"+":          procedures.SigilAdd,
-		"-":          procedures.SigilSubstract,
-		"*":          procedures.SigilMultiply,
-		"/":          procedures.SigilDivide,
-		"^":          procedures.SigilPower,
-	}
-)
-
-type Operation func(argc int, stack *utility.Stack[parser.Value]) (*parser.Value, error)
 
 func Execute(program compiler.Program) (*parser.Value, error) {
 	ops := program.Read()
@@ -47,12 +31,12 @@ func Execute(program compiler.Program) (*parser.Value, error) {
 			if !ok {
 				return nil, fmt.Errorf("CALL 2 param is not a int\n")
 			}
-			procedure, ok := proceduresMap[procedureName]
+			proc, ok := procedure.ProceduresMap[procedureName]
 			if !ok {
 				return nil, fmt.Errorf("CALL procedure `%s` is not found\n", procedureName)
 			}
 
-			value, err := procedure(argc, stack)
+			value, err := proc(argc, stack)
 			if err != nil {
 				return nil, fmt.Errorf("procedure `%s` returns error: %v\n", procedureName, err)
 			}

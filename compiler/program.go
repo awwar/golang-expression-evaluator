@@ -12,6 +12,8 @@ type OperationName int
 const (
 	PUSH OperationName = iota
 	CALL OperationName = iota
+	MARK OperationName = iota
+	VAR  OperationName = iota
 )
 
 type Operations struct {
@@ -30,11 +32,35 @@ type Program struct {
 	operations []*Operations
 }
 
+func (p *Program) NewMark(value parser.Value) {
+	p.operations = append(p.operations, &Operations{
+		Name:     MARK,
+		Params:   []any{value},
+		Describe: func() string { return fmt.Sprintf("MARK %s", value.GoString()) },
+	})
+}
+
 func (p *Program) NewPush(value parser.Value) {
 	p.operations = append(p.operations, &Operations{
 		Name:     PUSH,
 		Params:   []any{value},
 		Describe: func() string { return fmt.Sprintf("PUSH %s", value.GoString()) },
+	})
+}
+
+func (p *Program) NewVariable(name parser.Value) {
+	p.operations = append(p.operations, &Operations{
+		Name:     VAR,
+		Params:   []any{name},
+		Describe: func() string { return fmt.Sprintf("VAR %s", name.GoString()) },
+	})
+}
+
+func (p *Program) NewIf(ifTrue parser.Value, ifFalse parser.Value) {
+	p.operations = append(p.operations, &Operations{
+		Name:     VAR,
+		Params:   []any{ifTrue, ifFalse},
+		Describe: func() string { return fmt.Sprintf("IF %s %s", ifTrue.GoString(), ifFalse.GoString()) },
 	})
 }
 
