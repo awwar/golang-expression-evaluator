@@ -39,41 +39,12 @@ func (p *Parser) ParseProgram() ([]*Node, *Error) {
 	list := &NodeList{}
 
 	for {
-		token := p.stream.Get(p.currentPosition)
-
-		if token == nil {
-			lastToken := p.stream.Get(p.currentPosition - 1)
-
-			return nil, NewError(lastToken.Position, "cant find token")
+		node, err := p.subparseFlowDeclaration()
+		if err != nil {
+			return nil, err
 		}
 
-		if token.Type == tokenizer.TypeWord {
-			if !token.StartsWith("#") {
-				return nil, NewError(token.Position, "flow declaration must start with #")
-			}
-
-			subNodes := NodeList{}
-			for {
-				p.currentPosition++
-				nextToken := p.stream.Get(p.currentPosition)
-
-				if nextToken == nil || nextToken.StartsWith("#") {
-					p.currentPosition--
-					break
-				}
-
-				subNodeNode, err := p.subparseNode()
-				if err != nil {
-					return nil, err
-				}
-
-				subNodes.Push(subNodeNode)
-			}
-
-			node := CreateAsOperation(token.Value, subNodes.Result(), token.Position)
-
-			list.Push(node)
-		}
+		list.Push(node)
 
 		if p.currentPosition == p.lastPosition {
 			break
@@ -112,14 +83,10 @@ func (p *Parser) subparseExpression() ([]*Node, *Error) {
 
 		if token.Type == tokenizer.TypeWord {
 			if token.StartsWith("$") {
-				node := CreateAsString(token.Value, token.Position)
+				node := CreateAsVariable(token.Value, token.Position)
 
 				list.Push(node)
 			} else {
-				if false == p.stream.NextTokenIsBracer(p.currentPosition) {
-					return nil, NewError(token.Position, "word token uses only in function context")
-				}
-
 				subNodes, err := p.subparseListInBracers()
 				if err != nil {
 					return nil, err
@@ -212,6 +179,15 @@ func (p *Parser) subparseExpression() ([]*Node, *Error) {
 
 func (p *Parser) subparseListInBracers() ([]*Node, *Error) {
 	p.currentPosition++
+
+	openBracer := p.stream.Get(p.currentPosition)
+
+	if openBracer == nil || openBracer.Type != tokenizer.TypeBrackets {
+		errorToken := p.stream.Get(p.currentPosition - 1)
+
+		return nil, NewError(errorToken.Position, "word token uses only in function context")
+	}
+
 	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
 
 	if endPosition == -1 {
@@ -280,11 +256,11 @@ func (p *Parser) subparseNode() (*Node, *Error) {
 		if err != nil {
 			return nil, err
 		}
-		trueHashLink, err := p.subparseHashLinks()
+		trueHashLink, err := p.subparseFlowLink()
 		if err != nil {
 			return nil, err
 		}
-		falseHashLinks, err := p.subparseHashLinks()
+		falseHashLinks, err := p.subparseFlowLink()
 		if err != nil {
 			return nil, err
 		}
@@ -312,10 +288,48 @@ func (p *Parser) subparseVariableName() (*Node, *Error) {
 		return nil, NewError(token.Position, "variable declaration must start with $")
 	}
 
-	return CreateAsString(token.Value, token.Position), nil
+	return CreateAsVariable(token.Value, token.Position), nil
 }
 
-func (p *Parser) subparseHashLinks() (*Node, *Error) {
+func (p *Parser) subparseFlowDeclaration() (*Node, *Error) {
+	token := p.stream.Get(p.currentPosition)
+
+	if token == nil {
+		lastToken := p.stream.Get(p.currentPosition - 1)
+
+		return nil, NewError(lastToken.Position, "cant find token")
+	}
+
+	if token.Type != tokenizer.TypeWord {
+		return nil, NewError(token.Position, "hash links declaration must start with node name")
+	}
+
+	if !token.StartsWith("#") {
+		return nil, NewError(token.Position, "flow declaration must start with #")
+	}
+
+	subNodes := NodeList{}
+	for {
+		p.currentPosition++
+		nextToken := p.stream.Get(p.currentPosition)
+
+		if nextToken == nil || nextToken.StartsWith("#") {
+			p.currentPosition--
+			break
+		}
+
+		subNodeNode, err := p.subparseNode()
+		if err != nil {
+			return nil, err
+		}
+
+		subNodes.Push(subNodeNode)
+	}
+
+	return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
+}
+
+func (p *Parser) subparseFlowLink() (*Node, *Error) {
 	p.currentPosition++
 	token := p.stream.Get(p.currentPosition)
 
@@ -327,5 +341,5 @@ func (p *Parser) subparseHashLinks() (*Node, *Error) {
 		return nil, NewError(token.Position, "hash links declaration must start with #")
 	}
 
-	return CreateAsString(token.Value, token.Position), nil
+	return CreateAsFlowLink(token.Value, token.Position), nil
 }

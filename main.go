@@ -31,19 +31,10 @@ func main() {
 		return
 	}
 
-	if len(tree) != 1 {
-		fmt.Println("All nodes must collapse in one node, got: ", len(tree))
-
-		for _, rt := range tree {
-			fmt.Println(rt.String(0))
-		}
-
-		return
+	for _, rt := range tree {
+		fmt.Println(rt.String(0))
 	}
 
-	root := tree[0]
-
-	fmt.Println(root.String(0))
 	//
 	//compile := compiler.NewCompiler()
 	//
