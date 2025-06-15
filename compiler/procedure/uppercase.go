@@ -4,15 +4,19 @@ import (
 	"errors"
 	"strings"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("uppercase", Uppercase)
+	AppendOperation("uppercase", &Uppercase{})
 }
 
-func Uppercase(argc int, stack *utility.Stack[parser.Value]) error {
+type Uppercase struct {
+	CommonProcedure
+}
+
+func (u *Uppercase) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 1 {
 		return errors.New("sigil add: wrong number of arguments")
 	}
@@ -24,7 +28,7 @@ func Uppercase(argc int, stack *utility.Stack[parser.Value]) error {
 
 	strVal := strings.ToUpper(*firstOperand.StringVal)
 
-	stack.Push(parser.NewString(strVal))
+	stack.Push(program.NewString(strVal))
 
 	return nil
 }

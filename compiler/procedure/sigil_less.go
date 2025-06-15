@@ -3,17 +3,21 @@ package procedure
 import (
 	"errors"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("*", SigilMultiply)
+	AppendOperation("<", &SigilLess{})
 }
 
-func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) error {
+type SigilLess struct {
+	CommonProcedure
+}
+
+func (s *SigilLess) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 2 {
-		return errors.New("sigil multiply: wrong number of arguments")
+		return errors.New("sigil less: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
@@ -26,7 +30,7 @@ func SigilMultiply(argc int, stack *utility.Stack[parser.Value]) error {
 		return err
 	}
 
-	newV, err := firstOperand.Multiply(secondOperand)
+	newV, err := firstOperand.Less(secondOperand)
 	if err != nil {
 		return err
 	}

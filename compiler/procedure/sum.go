@@ -1,16 +1,20 @@
 package procedure
 
 import (
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("sum", Sum)
+	AppendOperation("sum", &Sum{})
 }
 
-func Sum(argc int, stack *utility.Stack[parser.Value]) error {
-	var result *parser.Value
+type Sum struct {
+	CommonProcedure
+}
+
+func (s *Sum) Execute(argc int, stack *utility.Stack[program.Value]) error {
+	var result *program.Value
 
 	for i := 0; i < argc; i++ {
 		operand, err := stack.Pop()

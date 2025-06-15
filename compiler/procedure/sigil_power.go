@@ -3,17 +3,21 @@ package procedure
 import (
 	"errors"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("+", SigilAdd)
+	AppendOperation("^", &SigilPower{})
 }
 
-func SigilAdd(argc int, stack *utility.Stack[parser.Value]) error {
+type SigilPower struct {
+	CommonProcedure
+}
+
+func (s *SigilPower) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 2 {
-		return errors.New("sigil add: wrong number of arguments")
+		return errors.New("sigil power: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
@@ -26,7 +30,7 @@ func SigilAdd(argc int, stack *utility.Stack[parser.Value]) error {
 		return err
 	}
 
-	newV, err := firstOperand.Add(secondOperand)
+	newV, err := firstOperand.Power(secondOperand)
 	if err != nil {
 		return err
 	}

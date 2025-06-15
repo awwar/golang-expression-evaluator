@@ -2,6 +2,8 @@ package parser
 
 import (
 	"fmt"
+
+	"expression_parser/program"
 )
 
 type Transformer func(list TransformableNodeList) (bool, error)
@@ -150,8 +152,8 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 
 	if operandNode.IsNumber() {
 		var minusValue int64 = -1
-		value := Value{
-			valueType: Integer,
+		value := program.Value{
+			ValueType: program.Integer,
 			StringVal: nil,
 			FloatVal:  nil,
 			IntVal:    &minusValue,

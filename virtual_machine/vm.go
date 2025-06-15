@@ -3,16 +3,15 @@ package virtual_machine
 import (
 	"fmt"
 
-	"expression_parser/compiler"
-	"expression_parser/parser"
+	"expression_parser/compiler/procedure"
+	"expression_parser/program"
 	"expression_parser/utility"
-	"expression_parser/virtual_machine/procedure"
 )
 
-func Execute(program compiler.Program) error {
-	ops := program.Read()
-	stack := utility.NewStack[parser.Value]()
-	context := map[string]*parser.Value{}
+func Execute(pr program.Program) error {
+	ops := pr.Read()
+	stack := utility.NewStack[program.Value]()
+	context := map[string]*program.Value{}
 	trace := utility.NewStack[int]()
 
 	opI := getBodyOfMark(ops, "#MAIN")
@@ -28,9 +27,9 @@ func Execute(program compiler.Program) error {
 		opI++
 
 		switch op.Name {
-		case compiler.MARK:
+		case program.MARK:
 			opI = len(ops)
-		case compiler.CALL:
+		case program.CALL:
 			procedureName, ok := op.Params[0].(string)
 			if !ok {
 				return fmt.Errorf("CALL 1 param is not a string")
@@ -44,11 +43,11 @@ func Execute(program compiler.Program) error {
 				return fmt.Errorf("CALL procedure `%s` is not found", procedureName)
 			}
 
-			if err := proc(argc, stack); err != nil {
+			if err := proc.Execute(argc, stack); err != nil {
 				return fmt.Errorf("procedure `%s` returns error: %v", procedureName, err)
 			}
-		case compiler.PUSH:
-			v, ok := op.Params[0].(parser.Value)
+		case program.PUSH:
+			v, ok := op.Params[0].(program.Value)
 			if !ok {
 				return fmt.Errorf("PUSH param is not a *value")
 			}
@@ -57,8 +56,8 @@ func Execute(program compiler.Program) error {
 			} else {
 				stack.Push(&v)
 			}
-		case compiler.VAR:
-			v, ok := op.Params[0].(parser.Value)
+		case program.VAR:
+			v, ok := op.Params[0].(program.Value)
 			if !ok {
 				return fmt.Errorf("PUSH param is not a *value")
 			}
@@ -67,7 +66,7 @@ func Execute(program compiler.Program) error {
 				return err
 			}
 			context[*v.StringVal] = operand
-		case compiler.IF:
+		case program.IF:
 			trace.Push(utility.AsPtr(opI))
 
 			operand, err := stack.Pop()
@@ -105,9 +104,9 @@ func Execute(program compiler.Program) error {
 	return nil
 }
 
-func getBodyOfMark(ops []*compiler.Operations, mark string) int {
+func getBodyOfMark(ops []*program.Operations, mark string) int {
 	for i, op := range ops {
-		if op.Name == compiler.MARK {
+		if op.Name == program.MARK {
 			markName, ok := op.Params[0].(string)
 			if !ok {
 				return len(ops)

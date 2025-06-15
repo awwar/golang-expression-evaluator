@@ -3,15 +3,19 @@ package procedure
 import (
 	"fmt"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("OUT", Out)
+	AppendOperation("OUT", &Out{})
 }
 
-func Out(argc int, stack *utility.Stack[parser.Value]) error {
+type Out struct {
+	CommonProcedure
+}
+
+func (o *Out) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 1 {
 		return fmt.Errorf("OUT() accepted only one argument")
 	}

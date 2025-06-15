@@ -3,18 +3,20 @@ package compiler
 import (
 	"fmt"
 
+	"expression_parser/compiler/procedure"
 	"expression_parser/parser"
+	"expression_parser/program"
 )
 
 func NewCompiler() *Compiler {
-	return &Compiler{program: NewProgram()}
+	return &Compiler{program: program.NewProgram()}
 }
 
 type Compiler struct {
-	program *Program
+	program *program.Program
 }
 
-func (c *Compiler) Compile(node *parser.Node) (*Program, error) {
+func (c *Compiler) Compile(node *parser.Node) (*program.Program, error) {
 	err := c.doCompile(node)
 	if err != nil {
 		return nil, err
@@ -28,24 +30,17 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 		return fmt.Errorf("compiler.Compile: nil node")
 	}
 
-	if node.Type == parser.TypeOperation && (*node.Value.StringVal) == "VAR" {
-		if err := c.doCompile(node.Params[1]); err != nil {
-			return err
+	if node.Type == parser.TypeOperation {
+		if proc, ok := procedure.ProceduresMap[*node.Value.StringVal]; ok {
+			return proc.Compile(c.program, node, c.subCompile)
 		}
-
-		c.program.NewVariable(*node.Params[0].Value)
-		return nil
 	}
 
-	if node.Type == parser.TypeOperation && (*node.Value.StringVal) == "IF" {
-		if err := c.doCompile(node.Params[0]); err != nil {
-			return err
-		}
+	return c.subCompile(node)
 
-		c.program.NewIf(*node.Params[1].Value.StringVal, *node.Params[2].Value.StringVal)
-		return nil
-	}
+}
 
+func (c *Compiler) subCompile(node *parser.Node) error {
 	if node.Type == parser.TypeFlowDeclaration {
 		c.program.NewMark(*node.Value.StringVal)
 	}

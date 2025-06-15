@@ -1,4 +1,4 @@
-package parser
+package program
 
 import (
 	"fmt"
@@ -21,15 +21,15 @@ const (
 var MapTypeToTypeName = map[NodeValueType]string{Integer: "int", Float: "float", Atom: "atom", String: "string", Boolean: "bool"}
 
 func NewString(val string) *Value {
-	return &Value{valueType: String, StringVal: &val}
+	return &Value{ValueType: String, StringVal: &val}
 }
 
 func NewFloat(val float64) *Value {
-	return &Value{valueType: Float, FloatVal: &val}
+	return &Value{ValueType: Float, FloatVal: &val}
 }
 
 type Value struct {
-	valueType NodeValueType
+	ValueType NodeValueType
 	BoolVal   *bool
 	StringVal *string
 	FloatVal  *float64
@@ -40,7 +40,7 @@ type Value struct {
 func (v *Value) String() string {
 	asStringValue, _ := v.ToString()
 
-	if v.valueType == String {
+	if v.ValueType == String {
 		return fmt.Sprintf(`"%s"`, *asStringValue.StringVal)
 	}
 
@@ -52,11 +52,11 @@ func (v *Value) GoString() string {
 }
 
 func (v *Value) TypeAsString() string {
-	return MapTypeToTypeName[v.valueType]
+	return MapTypeToTypeName[v.ValueType]
 }
 
 func (v *Value) Add(rv *Value) (*Value, error) {
-	if v.valueType == String || rv.valueType == String {
+	if v.ValueType == String || rv.ValueType == String {
 		leftValue, err := v.ToString()
 		if err != nil {
 			return nil, err
@@ -69,7 +69,7 @@ func (v *Value) Add(rv *Value) (*Value, error) {
 
 		stVal := fmt.Sprintf("%s%s", *leftValue.StringVal, *rightValue.StringVal)
 
-		return &Value{StringVal: &stVal, valueType: String}, nil
+		return &Value{StringVal: &stVal, ValueType: String}, nil
 	}
 
 	if !v.IsNumber() || !rv.IsNumber() {
@@ -148,11 +148,11 @@ func (v *Value) Divide(rv *Value) (*Value, error) {
 		return nil, fmt.Errorf("unable to divide %s to %s", v.TypeAsString(), rv.TypeAsString())
 	}
 
-	if (rv.valueType == Integer && *rv.IntVal == 0) || (rv.valueType == Float && *rv.FloatVal == 0) {
+	if (rv.ValueType == Integer && *rv.IntVal == 0) || (rv.ValueType == Float && *rv.FloatVal == 0) {
 		return nil, fmt.Errorf("unable to divide on 0")
 	}
 
-	newValue := Value{valueType: Float}
+	newValue := Value{ValueType: Float}
 
 	lVal, err := v.ToFloat()
 	if err != nil {
@@ -183,15 +183,15 @@ func (v *Value) Power(rv *Value) (*Value, error) {
 }
 
 func (v *Value) IsNumber() bool {
-	return v.valueType == Float || v.valueType == Integer
+	return v.ValueType == Float || v.ValueType == Integer
 }
 
 func (v *Value) IsBoolean() bool {
-	return v.valueType == Boolean
+	return v.ValueType == Boolean
 }
 
 func (v *Value) IsAtom() bool {
-	return v.valueType == Atom
+	return v.ValueType == Atom
 }
 
 func (v *Value) IsMinusOrPlus() bool {
@@ -205,9 +205,9 @@ func (v *Value) IsMinusOrPlus() bool {
 func (v *Value) ToFloat() (*Value, error) {
 	newValue := *v
 
-	if v.valueType == Float {
+	if v.ValueType == Float {
 		return &newValue, nil
-	} else if v.valueType == Integer {
+	} else if v.ValueType == Integer {
 		intVal := *v.IntVal
 		floatVal := float64(intVal)
 
@@ -223,19 +223,19 @@ func (v *Value) ToFloat() (*Value, error) {
 func (v *Value) ToBoolean() (*Value, error) {
 	newValue := *v
 
-	if v.valueType == Boolean {
+	if v.ValueType == Boolean {
 		return &newValue, nil
 	}
-	if v.valueType == Float {
-		newValue.valueType = Boolean
+	if v.ValueType == Float {
+		newValue.ValueType = Boolean
 		newValue.BoolVal = utility.AsPtr(*v.FloatVal != 0.0)
 		newValue.FloatVal = nil
-	} else if v.valueType == Integer {
-		newValue.valueType = Boolean
+	} else if v.ValueType == Integer {
+		newValue.ValueType = Boolean
 		newValue.BoolVal = utility.AsPtr(*v.IntVal != 0)
 		newValue.IntVal = nil
-	} else if v.valueType == String {
-		newValue.valueType = Boolean
+	} else if v.ValueType == String {
+		newValue.ValueType = Boolean
 		newValue.BoolVal = utility.AsPtr(*v.StringVal != "")
 		newValue.StringVal = nil
 	}
@@ -245,13 +245,13 @@ func (v *Value) ToBoolean() (*Value, error) {
 
 func (v *Value) ToString() (*Value, error) {
 	newValue := *v
-	newValue.valueType = String
+	newValue.ValueType = String
 
-	if v.valueType == Integer {
+	if v.ValueType == Integer {
 		newString := fmt.Sprintf("%d", *v.IntVal)
 		newValue.StringVal = &newString
 		newValue.IntVal = nil
-	} else if v.valueType == Float {
+	} else if v.ValueType == Float {
 		newString := strconv.FormatFloat(*v.FloatVal, 'f', -1, 64)
 		newValue.StringVal = &newString
 		newValue.FloatVal = nil
@@ -261,10 +261,10 @@ func (v *Value) ToString() (*Value, error) {
 }
 
 func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb func(int64, int64) int64) (*Value, error) {
-	newValue := Value{valueType: Float}
+	newValue := Value{ValueType: Float}
 
-	if v.valueType == Integer && rv.valueType == Integer {
-		newValue.valueType = Integer
+	if v.ValueType == Integer && rv.ValueType == Integer {
+		newValue.ValueType = Integer
 		lVal := *v.IntVal
 		rVal := *rv.IntVal
 		rez := iCb(lVal, rVal)
@@ -290,10 +290,10 @@ func (v *Value) calculate(rv *Value, fCb func(float64, float64) float64, iCb fun
 }
 
 func (v *Value) cmp(rv *Value, fCb func(float64, float64) bool, iCb func(int64, int64) bool) (*Value, error) {
-	newValue := Value{valueType: Boolean}
+	newValue := Value{ValueType: Boolean}
 
-	if v.valueType == Integer && rv.valueType == Integer {
-		newValue.valueType = Integer
+	if v.ValueType == Integer && rv.ValueType == Integer {
+		newValue.ValueType = Integer
 		lVal := *v.IntVal
 		rVal := *rv.IntVal
 		newValue.BoolVal = utility.AsPtr(iCb(lVal, rVal))

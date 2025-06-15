@@ -3,15 +3,19 @@ package procedure
 import (
 	"errors"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("-", SigilSubtract)
+	AppendOperation("-", &SigilSubtract{})
 }
 
-func SigilSubtract(argc int, stack *utility.Stack[parser.Value]) error {
+type SigilSubtract struct {
+	CommonProcedure
+}
+
+func (s *SigilSubtract) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 2 {
 		return errors.New("sigil subtract: wrong number of arguments")
 	}

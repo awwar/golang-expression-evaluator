@@ -3,15 +3,19 @@ package procedure
 import (
 	"errors"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("=", SigilEq)
+	AppendOperation("=", &SigilEq{})
 }
 
-func SigilEq(argc int, stack *utility.Stack[parser.Value]) error {
+type SigilEq struct {
+	CommonProcedure
+}
+
+func (s *SigilEq) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 2 {
 		return errors.New("sigil eq: wrong number of arguments")
 	}

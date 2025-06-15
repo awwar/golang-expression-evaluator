@@ -1,10 +1,8 @@
-package compiler
+package program
 
 import (
 	"fmt"
 	"strings"
-
-	"expression_parser/parser"
 )
 
 type OperationName int
@@ -41,7 +39,7 @@ func (p *Program) NewMark(markName string) {
 	})
 }
 
-func (p *Program) NewPush(value parser.Value) {
+func (p *Program) NewPush(value Value) {
 	p.operations = append(p.operations, &Operations{
 		Name:     PUSH,
 		Params:   []any{value},
@@ -49,7 +47,7 @@ func (p *Program) NewPush(value parser.Value) {
 	})
 }
 
-func (p *Program) NewVariable(name parser.Value) {
+func (p *Program) NewVariable(name Value) {
 	p.operations = append(p.operations, &Operations{
 		Name:     VAR,
 		Params:   []any{name},

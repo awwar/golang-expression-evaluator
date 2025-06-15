@@ -4,15 +4,19 @@ import (
 	"errors"
 	"strings"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendOperation("trim_space", TrimSpace)
+	AppendOperation("trim_space", &TrimSpace{})
 }
 
-func TrimSpace(argc int, stack *utility.Stack[parser.Value]) error {
+type TrimSpace struct {
+	CommonProcedure
+}
+
+func (t *TrimSpace) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 1 {
 		return errors.New("sigil add: wrong number of arguments")
 	}
@@ -24,7 +28,7 @@ func TrimSpace(argc int, stack *utility.Stack[parser.Value]) error {
 
 	strVal := strings.TrimSpace(*firstOperand.StringVal)
 
-	stack.Push(parser.NewString(strVal))
+	stack.Push(program.NewString(strVal))
 
 	return nil
 }
