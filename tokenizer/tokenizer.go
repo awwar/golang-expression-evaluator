@@ -2,6 +2,8 @@ package tokenizer
 
 import (
 	"strings"
+
+	"expression_parser/utility"
 )
 
 var (
@@ -17,7 +19,6 @@ type Tokenizer struct {
 	Value           string
 	Stream          TokenStream
 	CurrentPosition int
-	Expression      string
 }
 
 func New() *Tokenizer {
@@ -27,8 +28,8 @@ func New() *Tokenizer {
 func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error) {
 	t.setExpression(expression)
 
-	for i := 0; i < len(t.Expression); i++ {
-		char := string((t.Expression)[i])
+	for i := 0; i < len(t.Stream.Expression); i++ {
+		char := string((t.Stream.Expression)[i])
 		t.CurrentPosition = i
 
 		if char == `"` {
@@ -54,7 +55,7 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 		} else if strings.Contains(wordChars, char) {
 			t.changeTokenType(TypeWord)
 		} else {
-			return nil, &TokenizeError{Position: i, Expression: t.Expression}
+			return nil, utility.NewError(i, t.Stream.Expression, "tokenize error")
 		}
 
 		t.Value = t.Value + char
@@ -91,5 +92,5 @@ func (t *Tokenizer) setExpression(expression *string) {
 	e = strings.TrimSpace(*expression)
 	e = strings.ReplaceAll(e, "\r", "")
 
-	t.Expression = e
+	t.Stream.Expression = e
 }

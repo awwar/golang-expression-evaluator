@@ -1,6 +1,9 @@
 package tokenizer
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	TypeEmpty     = iota
@@ -32,4 +35,12 @@ type Token struct {
 
 func (t *Token) String() string {
 	return fmt.Sprintf("{value: \"%s\", type: %s, pos: %d}", t.Value, MapTypeToTypeName[t.Type], t.Position)
+}
+
+func (t *Token) StartsWith(s string) bool {
+	if t == nil {
+		return false
+	}
+
+	return strings.HasPrefix(t.Value, s)
 }

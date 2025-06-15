@@ -6,7 +6,8 @@ import (
 )
 
 type TokenStream struct {
-	Tokens []*Token
+	Tokens     []*Token
+	Expression string
 }
 
 func (t *TokenStream) Length() int {

@@ -4,71 +4,120 @@ import (
 	"fmt"
 
 	"expression_parser/compiler"
-	"expression_parser/parser/expression"
+	"expression_parser/parser"
 	"expression_parser/utility"
-	"expression_parser/virtual_machine/procedures"
+	"expression_parser/virtual_machine/procedure"
 )
 
-var (
-	proceduresMap = map[string]Operation{
-		"sum":        procedures.Sum,
-		"uppercase":  procedures.Uppercase,
-		"trim_space": procedures.TrimSpace,
-		"+":          procedures.SigilAdd,
-		"-":          procedures.SigilSubstract,
-		"*":          procedures.SigilMultiply,
-		"/":          procedures.SigilDivide,
-		"^":          procedures.SigilPower,
-	}
-)
-
-type Operation func(argc int, stack *utility.Stack[expression.Value]) (*expression.Value, error)
-
-func Execute(program compiler.Program) (*expression.Value, error) {
+func Execute(program compiler.Program) error {
 	ops := program.Read()
-	stack := utility.NewStack[expression.Value]()
+	stack := utility.NewStack[parser.Value]()
+	context := map[string]*parser.Value{}
+	trace := utility.NewStack[int]()
 
-	opI := 0
+	opI := getBodyOfMark(ops, "#MAIN")
 	for {
 		if opI > len(ops)-1 {
-			break
+			lastOp, err := trace.Pop()
+			if err != nil {
+				break
+			}
+			opI = *lastOp
 		}
 		op := ops[opI]
 		opI++
 
 		switch op.Name {
+		case compiler.MARK:
+			opI = len(ops)
 		case compiler.CALL:
 			procedureName, ok := op.Params[0].(string)
 			if !ok {
-				return nil, fmt.Errorf("CALL 1 param is not a string\n")
+				return fmt.Errorf("CALL 1 param is not a string")
 			}
 			argc, ok := op.Params[1].(int)
 			if !ok {
-				return nil, fmt.Errorf("CALL 2 param is not a int\n")
+				return fmt.Errorf("CALL 2 param is not a int")
 			}
-			procedure, ok := proceduresMap[procedureName]
+			proc, ok := procedure.ProceduresMap[procedureName]
 			if !ok {
-				return nil, fmt.Errorf("CALL procedure `%s` is not found\n", procedureName)
+				return fmt.Errorf("CALL procedure `%s` is not found", procedureName)
 			}
 
-			value, err := procedure(argc, stack)
-			if err != nil {
-				return nil, fmt.Errorf("procedure `%s` returns error: %v\n", procedureName, err)
+			if err := proc(argc, stack); err != nil {
+				return fmt.Errorf("procedure `%s` returns error: %v", procedureName, err)
 			}
-			stack.Push(value)
 		case compiler.PUSH:
-			v, ok := op.Params[0].(expression.Value)
+			v, ok := op.Params[0].(parser.Value)
 			if !ok {
-				return nil, fmt.Errorf("PUSH param is not a *value\n")
+				return fmt.Errorf("PUSH param is not a *value")
 			}
-			stack.Push(&v)
+			if v.IsAtom() {
+				stack.Push(context[*v.StringVal])
+			} else {
+				stack.Push(&v)
+			}
+		case compiler.VAR:
+			v, ok := op.Params[0].(parser.Value)
+			if !ok {
+				return fmt.Errorf("PUSH param is not a *value")
+			}
+			operand, err := stack.Pop()
+			if err != nil {
+				return err
+			}
+			context[*v.StringVal] = operand
+		case compiler.IF:
+			trace.Push(utility.AsPtr(opI))
+
+			operand, err := stack.Pop()
+			if err != nil {
+				return err
+			}
+
+			condition, err := operand.ToBoolean()
+			if err != nil {
+				return err
+			}
+
+			if *condition.BoolVal {
+				trueMark, ok := op.Params[0].(string)
+				if !ok {
+					return fmt.Errorf("IF trueMark param is not a string")
+				}
+
+				opI = getBodyOfMark(ops, trueMark)
+			} else {
+				falseMark, ok := op.Params[1].(string)
+				if !ok {
+					return fmt.Errorf("IF falseMark param is not a string")
+				}
+
+				opI = getBodyOfMark(ops, falseMark)
+			}
 		}
 	}
 
-	v, err := stack.Pop()
-	if err != nil {
-		return nil, fmt.Errorf("stack.Top() returns error: %v\n", err)
+	if !stack.IsEmpty() {
+		return fmt.Errorf("after work stack is not empty")
 	}
 
-	return v, nil
+	return nil
+}
+
+func getBodyOfMark(ops []*compiler.Operations, mark string) int {
+	for i, op := range ops {
+		if op.Name == compiler.MARK {
+			markName, ok := op.Params[0].(string)
+			if !ok {
+				return len(ops)
+			}
+
+			if markName == mark {
+				return i + 1
+			}
+		}
+	}
+
+	return len(ops)
 }

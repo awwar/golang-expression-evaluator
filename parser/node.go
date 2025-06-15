@@ -5,32 +5,49 @@ import (
 	"strconv"
 	"strings"
 
-	"expression_parser/parser/expression"
+	"expression_parser/utility"
 )
 
 const (
-	TypeOperation = iota
-	TypeConstant  = iota
+	TypeOperation       = iota
+	TypeConstant        = iota
+	TypeVariable        = iota
+	TypeFlowLink        = iota
+	TypeFlowDeclaration = iota
+	TypeProgram         = iota
 )
 
-var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, "^": 3, ".": 4}
-var StringPriority = 4
-var NumberPriority = 4
-var FunctionPriority = 4
+var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
 
 type Node struct {
 	Type          int
-	Value         *expression.Value
+	Value         *Value
 	Params        []*Node
 	Priority      int
 	TokenPosition int
 }
 
+func CreateAsProgram(params []*Node) *Node {
+	name := "root"
+	node := &Node{
+		Type: TypeProgram,
+		Value: &Value{
+			valueType: Atom,
+			StringVal: &name,
+		},
+		Params:        params,
+		Priority:      4,
+		TokenPosition: 0,
+	}
+
+	return node
+}
+
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
 	node := &Node{
 		Type: TypeOperation,
-		Value: &expression.Value{
-			Type:      expression.Atom,
+		Value: &Value{
+			valueType: Atom,
 			StringVal: &operation,
 		},
 		Params:        params,
@@ -39,24 +56,24 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 	}
 
 	if !node.IsMathematicalOperation() {
-		node.Priority = FunctionPriority
+		node.Priority = 4
 	}
 
 	return node
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
-	valueObject := expression.Value{}
+	valueObject := Value{}
 
 	if strings.Contains(value, ".") {
-		val, _ := strconv.ParseFloat(value, 64)
+		val := utility.Must(strconv.ParseFloat(value, 64))
 
-		valueObject.Type = expression.Float
+		valueObject.valueType = Float
 		valueObject.FloatVal = &val
 	} else {
-		val, _ := strconv.ParseInt(value, 0, 64)
+		val := utility.Must(strconv.ParseInt(value, 0, 64))
 
-		valueObject.Type = expression.Integer
+		valueObject.valueType = Integer
 		valueObject.IntVal = &val
 	}
 
@@ -64,7 +81,7 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 		Type:          TypeConstant,
 		Value:         &valueObject,
 		Params:        make([]*Node, 0),
-		Priority:      NumberPriority,
+		Priority:      4,
 		TokenPosition: tokenPosition,
 	}
 }
@@ -72,25 +89,65 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeConstant,
-		Value: &expression.Value{
-			Type:      expression.String,
+		Value: &Value{
+			valueType: String,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),
-		Priority:      StringPriority,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *Node {
+	return &Node{
+		Type: TypeFlowDeclaration,
+		Value: &Value{
+			valueType: Atom,
+			StringVal: &value,
+		},
+		Params:        params,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowLink(value string, tokenPosition int) *Node {
+	return &Node{
+		Type: TypeFlowLink,
+		Value: &Value{
+			valueType: Atom,
+			StringVal: &value,
+		},
+		Params:        make([]*Node, 0),
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsVariable(value string, tokenPosition int) *Node {
+	return &Node{
+		Type: TypeVariable,
+		Value: &Value{
+			valueType: Atom,
+			StringVal: &value,
+		},
+		Params:        make([]*Node, 0),
+		Priority:      4,
 		TokenPosition: tokenPosition,
 	}
 }
 
 func (f *Node) String(indent int) string {
+	if f == nil {
+		return "nil"
+	}
+
 	stringIndent := strings.Repeat("    ", indent)
 
 	branches := ""
 
 	for _, n := range f.Params {
-		if n == nil {
-			continue
-		}
 		branches = branches + fmt.Sprintf("%s└── %s", stringIndent, n.String(indent+1))
 	}
 
