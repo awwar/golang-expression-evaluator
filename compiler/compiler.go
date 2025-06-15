@@ -31,7 +31,7 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 	}
 
 	if node.Type == parser.TypeOperation {
-		if proc, ok := procedure.ProceduresMap[*node.Value.StringVal]; ok {
+		if proc, ok := procedure.Map[*node.Value.StringVal]; ok {
 			return proc.Compile(c.program, node, c.subCompile)
 		}
 	}

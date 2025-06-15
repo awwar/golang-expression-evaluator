@@ -44,6 +44,10 @@ func (v *Value) String() string {
 		return fmt.Sprintf(`"%s"`, *asStringValue.StringVal)
 	}
 
+	if v.ValueType == String {
+		return fmt.Sprintf(`"%s"`, *asStringValue.StringVal)
+	}
+
 	return *asStringValue.StringVal
 }
 
@@ -255,6 +259,10 @@ func (v *Value) ToString() (*Value, error) {
 		newString := strconv.FormatFloat(*v.FloatVal, 'f', -1, 64)
 		newValue.StringVal = &newString
 		newValue.FloatVal = nil
+	} else if v.ValueType == Boolean {
+		newString := fmt.Sprint(*newValue.BoolVal)
+		newValue.StringVal = &newString
+		newValue.BoolVal = nil
 	}
 
 	return &newValue, nil

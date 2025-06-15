@@ -28,5 +28,5 @@ func main() {
 
 	fmt.Println(program.String())
 
-	utility.MustVoid(virtual_machine.Execute(*program))
+	utility.MustVoid(virtual_machine.Execute(program))
 }

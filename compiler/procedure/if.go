@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	AppendOperation("IF", &If{})
+	AppendProcedure("IF", &If{})
 }
 
 type If struct {
@@ -18,7 +18,10 @@ func (i *If) Compile(program *program.Program, node *parser.Node, subcompile fun
 		return err
 	}
 
-	program.NewIf(*node.Params[1].Value.StringVal, *node.Params[2].Value.StringVal)
+	program.NewCSKP(2)
+	program.NewJMP(*node.Params[2].Value.StringVal)
+	program.NewCSKP(1)
+	program.NewJMP(*node.Params[1].Value.StringVal)
 
 	return nil
 }

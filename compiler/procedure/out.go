@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("OUT", &Out{})
+	AppendProcedure("OUT", &Out{})
 }
 
 type Out struct {

@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("/", &SigilDivide{})
+	AppendProcedure("/", &SigilDivide{})
 }
 
 type SigilDivide struct {

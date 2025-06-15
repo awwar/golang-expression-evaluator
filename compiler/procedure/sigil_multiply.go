@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("*", &SigilMultiply{})
+	AppendProcedure("*", &SigilMultiply{})
 }
 
 type SigilMultiply struct {

@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	AppendOperation("uppercase", &Uppercase{})
+	AppendProcedure("uppercase", &Uppercase{})
 }
 
 type Uppercase struct {

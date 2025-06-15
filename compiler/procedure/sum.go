@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	AppendOperation("sum", &Sum{})
+	AppendProcedure("sum", &Sum{})
 }
 
 type Sum struct {

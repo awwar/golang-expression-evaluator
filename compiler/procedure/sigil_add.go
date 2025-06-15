@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("+", &SigilAdd{})
+	AppendProcedure("+", &SigilAdd{})
 }
 
 type SigilAdd struct {

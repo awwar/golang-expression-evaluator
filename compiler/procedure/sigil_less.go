@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("<", &SigilLess{})
+	AppendProcedure("<", &SigilLess{})
 }
 
 type SigilLess struct {

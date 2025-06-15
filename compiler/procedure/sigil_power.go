@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	AppendOperation("^", &SigilPower{})
+	AppendProcedure("^", &SigilPower{})
 }
 
 type SigilPower struct {

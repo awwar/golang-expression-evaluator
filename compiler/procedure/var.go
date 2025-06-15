@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	AppendOperation("VAR", &Var{})
+	AppendProcedure("VAR", &Var{})
 }
 
 type Var struct {
@@ -18,7 +18,7 @@ func (i *Var) Compile(program *program.Program, node *parser.Node, subcompile fu
 		return err
 	}
 
-	program.NewVariable(*node.Params[0].Value)
+	program.NewVariable(*node.Params[0].Value.StringVal)
 
 	return nil
 }

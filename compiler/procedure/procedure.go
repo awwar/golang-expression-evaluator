@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	ProceduresMap = map[string]Procedure{}
+	Map = map[string]Procedure{}
 )
 
-func AppendOperation(name string, op Procedure) {
-	ProceduresMap[name] = op
+func AppendProcedure(name string, op Procedure) {
+	Map[name] = op
 }
 
 type Procedure interface {

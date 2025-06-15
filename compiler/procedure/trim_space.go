@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	AppendOperation("trim_space", &TrimSpace{})
+	AppendProcedure("trim_space", &TrimSpace{})
 }
 
 type TrimSpace struct {

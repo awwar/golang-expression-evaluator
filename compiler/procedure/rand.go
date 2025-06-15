@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	AppendOperation("rand", &Rand{})
+	AppendProcedure("rand", &Rand{})
 }
 
 type Rand struct {

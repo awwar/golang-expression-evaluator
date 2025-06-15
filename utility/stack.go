@@ -1,6 +1,9 @@
 package utility
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func NewStack[T any]() *Stack[T] {
 	return &Stack[T]{items: make([]*T, 0)}
@@ -40,8 +43,13 @@ func (s *Stack[T]) IsEmpty() bool {
 	return len(s.items) == 0
 }
 
-func (s *Stack[T]) Iterate(callback func(T)) {
+func (s *Stack[T]) ToString(callback func(T) string) string {
+	sb := strings.Builder{}
+	sb.WriteString("[ ")
 	for _, item := range s.items {
-		callback(*item)
+		sb.WriteString(callback(*item) + " ")
 	}
+	sb.WriteString("]")
+
+	return sb.String()
 }
