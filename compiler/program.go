@@ -33,11 +33,11 @@ type Program struct {
 	operations []*Operations
 }
 
-func (p *Program) NewMark(value parser.Value) {
+func (p *Program) NewMark(markName string) {
 	p.operations = append(p.operations, &Operations{
 		Name:     MARK,
-		Params:   []any{value},
-		Describe: func() string { return fmt.Sprintf("MARK %s", value.GoString()) },
+		Params:   []any{markName},
+		Describe: func() string { return fmt.Sprintf("MARK %s", markName) },
 	})
 }
 
@@ -57,11 +57,11 @@ func (p *Program) NewVariable(name parser.Value) {
 	})
 }
 
-func (p *Program) NewIf(ifTrue parser.Value, ifFalse parser.Value) {
+func (p *Program) NewIf(ifTrueMarkName string, ifFalseMarkName string) {
 	p.operations = append(p.operations, &Operations{
 		Name:     IF,
-		Params:   []any{ifTrue, ifFalse},
-		Describe: func() string { return fmt.Sprintf("IF %s %s", ifTrue.GoString(), ifFalse.GoString()) },
+		Params:   []any{ifTrueMarkName, ifFalseMarkName},
+		Describe: func() string { return fmt.Sprintf("IF %s %s", ifTrueMarkName, ifFalseMarkName) },
 	})
 }
 

@@ -38,11 +38,7 @@ func (e *Error) Error() string {
 }
 
 func Must[T any](val T, err error) T {
-	if err != nil {
-		fmt.Printf("%v\n", err)
-
-		os.Exit(1)
-	}
+	MustVoid(err)
 
 	return val
 }

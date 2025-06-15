@@ -1,41 +1,81 @@
 # golang-expression-evaluator
 
-```bash
-"result = " + (1 + 2 * sum(3 + 4) / 5 + 6)
-[
-	{value: "result = ", type: string}
-	{value: "+", type: operation}
-	{value: "(", type: bracket}
-	{value: "1", type: number}
-	{value: "+", type: operation}
-	{value: "2", type: number}
-	{value: "*", type: operation}
-	{value: "sum", type: word}
-	{value: "(", type: bracket}
-	{value: "3", type: number}
-	{value: "+", type: operation}
-	{value: "4", type: number}
-	{value: ")", type: bracket}
-	{value: "/", type: operation}
-	{value: "5", type: number}
-	{value: "+", type: operation}
-	{value: "6", type: number}
-	{value: ")", type: bracket}
-]
-+
-└── #0 "result = "
-└── #1 +
-      └── #0 +
-            └── #0 1
-            └── #1 /
-                  └── #0 *
-                        └── #0 2
-                        └── #1 sum
-                              └── #0 +
-                                    └── #0 3
-                                    └── #1 4
-                  └── #1 5
-      └── #1 6
+## Program:
 
-"result = 9.8"
+```bash
+#MAIN
+VAR $SOME_VALUE (32)
+
+IF (rand() > 0.5) #MORE #LESS
+
+OUT (" Try Next?")
+
+#MORE
+OUT ("you're WIN!")
+
+#LESS
+VAR $OUT_RESULT (sum("you're lose ", $SOME_VALUE, " points!"))
+
+OUT ($OUT_RESULT)
+```
+
+## AST:
+
+```bash
+root
+└── #MAIN
+    └── VAR
+        └── $SOME_VALUE
+        └── 32
+    └── IF
+        └── >
+            └── rand
+            └── 0.5
+        └── #MORE
+        └── #LESS
+    └── OUT
+        └── " Try Next?"
+└── #MORE
+    └── OUT
+        └── "you're WIN!"
+└── #LESS
+    └── VAR
+        └── $OUT_RESULT
+        └── sum
+            └── "you're lose "
+            └── $SOME_VALUE
+            └── " points!"
+    └── OUT
+        └── $OUT_RESULT
+```
+
+## IL:
+
+```bash
+MARK #MAIN
+PUSH 32
+VAR $SOME_VALUE
+CALL rand 0
+PUSH 0.5
+CALL > 2
+IF #MORE #LESS
+PUSH " Try Next?"
+CALL OUT 1
+MARK #MORE
+PUSH "you're WIN!"
+CALL OUT 1
+MARK #LESS
+PUSH "you're lose "
+PUSH $SOME_VALUE
+PUSH " points!"
+CALL sum 3
+VAR $OUT_RESULT
+PUSH $OUT_RESULT
+CALL OUT 1
+```
+
+## Output:
+
+```bash
+you're lose 32 points! Try Next?
 ```

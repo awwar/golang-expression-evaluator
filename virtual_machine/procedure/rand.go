@@ -17,7 +17,7 @@ func Rand(argc int, stack *utility.Stack[parser.Value]) error {
 		return fmt.Errorf("rand() not accepted any argument")
 	}
 
-	stack.Push(&parser.Value{Type: parser.Float, FloatVal: utility.AsPtr(rand.Float64())})
+	stack.Push(parser.NewFloat(rand.Float64()))
 
 	return nil
 }

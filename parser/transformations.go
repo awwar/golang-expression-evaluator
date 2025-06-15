@@ -151,7 +151,7 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 	if operandNode.IsNumber() {
 		var minusValue int64 = -1
 		value := Value{
-			Type:      Integer,
+			valueType: Integer,
 			StringVal: nil,
 			FloatVal:  nil,
 			IntVal:    &minusValue,

@@ -52,7 +52,7 @@ func Execute(program compiler.Program) error {
 			if !ok {
 				return fmt.Errorf("PUSH param is not a *value")
 			}
-			if v.Type == parser.Atom {
+			if v.IsAtom() {
 				stack.Push(context[*v.StringVal])
 			} else {
 				stack.Push(&v)
@@ -68,28 +68,32 @@ func Execute(program compiler.Program) error {
 			}
 			context[*v.StringVal] = operand
 		case compiler.IF:
+			trace.Push(utility.AsPtr(opI))
+
 			operand, err := stack.Pop()
 			if err != nil {
 				return err
 			}
-			if operand.Type != parser.Boolean {
-				return fmt.Errorf("IF condition is not a boolean")
+
+			condition, err := operand.ToBoolean()
+			if err != nil {
+				return err
 			}
-			trace.Push(utility.AsPtr(opI))
-			if operand.BoolVal {
-				trueMark, ok := op.Params[0].(parser.Value)
+
+			if *condition.BoolVal {
+				trueMark, ok := op.Params[0].(string)
 				if !ok {
-					return fmt.Errorf("PUSH param is not a *value")
+					return fmt.Errorf("IF trueMark param is not a string")
 				}
 
-				opI = getBodyOfMark(ops, *trueMark.StringVal)
+				opI = getBodyOfMark(ops, trueMark)
 			} else {
-				falseMark, ok := op.Params[1].(parser.Value)
+				falseMark, ok := op.Params[1].(string)
 				if !ok {
-					return fmt.Errorf("PUSH param is not a *value")
+					return fmt.Errorf("IF falseMark param is not a string")
 				}
 
-				opI = getBodyOfMark(ops, *falseMark.StringVal)
+				opI = getBodyOfMark(ops, falseMark)
 			}
 		}
 	}
@@ -104,12 +108,12 @@ func Execute(program compiler.Program) error {
 func getBodyOfMark(ops []*compiler.Operations, mark string) int {
 	for i, op := range ops {
 		if op.Name == compiler.MARK {
-			markName, ok := op.Params[0].(parser.Value)
+			markName, ok := op.Params[0].(string)
 			if !ok {
 				return len(ops)
 			}
 
-			if *markName.StringVal == mark {
+			if markName == mark {
 				return i + 1
 			}
 		}

@@ -32,7 +32,7 @@ func CreateAsProgram(params []*Node) *Node {
 	node := &Node{
 		Type: TypeProgram,
 		Value: &Value{
-			Type:      Atom,
+			valueType: Atom,
 			StringVal: &name,
 		},
 		Params:        params,
@@ -47,7 +47,7 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 	node := &Node{
 		Type: TypeOperation,
 		Value: &Value{
-			Type:      Atom,
+			valueType: Atom,
 			StringVal: &operation,
 		},
 		Params:        params,
@@ -68,12 +68,12 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 	if strings.Contains(value, ".") {
 		val := utility.Must(strconv.ParseFloat(value, 64))
 
-		valueObject.Type = Float
+		valueObject.valueType = Float
 		valueObject.FloatVal = &val
 	} else {
 		val := utility.Must(strconv.ParseInt(value, 0, 64))
 
-		valueObject.Type = Integer
+		valueObject.valueType = Integer
 		valueObject.IntVal = &val
 	}
 
@@ -90,7 +90,7 @@ func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeConstant,
 		Value: &Value{
-			Type:      String,
+			valueType: String,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),
@@ -103,7 +103,7 @@ func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *N
 	return &Node{
 		Type: TypeFlowDeclaration,
 		Value: &Value{
-			Type:      Atom,
+			valueType: Atom,
 			StringVal: &value,
 		},
 		Params:        params,
@@ -116,7 +116,7 @@ func CreateAsFlowLink(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeFlowLink,
 		Value: &Value{
-			Type:      Atom,
+			valueType: Atom,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),
@@ -129,7 +129,7 @@ func CreateAsVariable(value string, tokenPosition int) *Node {
 	return &Node{
 		Type: TypeVariable,
 		Value: &Value{
-			Type:      Atom,
+			valueType: Atom,
 			StringVal: &value,
 		},
 		Params:        make([]*Node, 0),

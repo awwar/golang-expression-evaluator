@@ -42,12 +42,12 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 			return err
 		}
 
-		c.program.NewIf(*node.Params[1].Value, *node.Params[2].Value)
+		c.program.NewIf(*node.Params[1].Value.StringVal, *node.Params[2].Value.StringVal)
 		return nil
 	}
 
 	if node.Type == parser.TypeFlowDeclaration {
-		c.program.NewMark(*node.Value)
+		c.program.NewMark(*node.Value.StringVal)
 	}
 
 	for _, child := range node.Params {

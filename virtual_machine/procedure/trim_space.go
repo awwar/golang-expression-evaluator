@@ -24,7 +24,7 @@ func TrimSpace(argc int, stack *utility.Stack[parser.Value]) error {
 
 	strVal := strings.TrimSpace(*firstOperand.StringVal)
 
-	stack.Push(&parser.Value{Type: parser.String, StringVal: &strVal})
+	stack.Push(parser.NewString(strVal))
 
 	return nil
 }

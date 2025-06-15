@@ -8,12 +8,12 @@ import (
 )
 
 func init() {
-	AppendOperation("-", SigilSubstract)
+	AppendOperation("-", SigilSubtract)
 }
 
-func SigilSubstract(argc int, stack *utility.Stack[parser.Value]) error {
+func SigilSubtract(argc int, stack *utility.Stack[parser.Value]) error {
 	if argc != 2 {
-		return errors.New("sigil substract: wrong number of arguments")
+		return errors.New("sigil subtract: wrong number of arguments")
 	}
 
 	secondOperand, err := stack.Pop()
