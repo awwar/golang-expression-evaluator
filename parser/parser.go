@@ -266,7 +266,7 @@ func (p *Parser) subparseNode() (*Node, error) {
 			return nil, err
 		}
 		return CreateAsOperation(token.Value, []*Node{expression, trueHashLink, falseHashLinks}, token.Position), nil
-	case "OUT":
+	case "PRINT":
 		expression, err := p.subparseOneInBracers()
 		if err != nil {
 			return nil, err

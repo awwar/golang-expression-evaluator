@@ -8,16 +8,16 @@ import (
 )
 
 func init() {
-	AppendProcedure("OUT", &Out{})
+	AppendProcedure("PRINT", &Print{})
 }
 
-type Out struct {
+type Print struct {
 	CommonProcedure
 }
 
-func (o *Out) Execute(argc int, stack *utility.Stack[program.Value]) error {
+func (o *Print) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 1 {
-		return fmt.Errorf("OUT() accepted only one argument")
+		return fmt.Errorf("PRINT() accepted only one argument")
 	}
 
 	firstOperand, err := stack.Pop()
