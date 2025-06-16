@@ -103,24 +103,24 @@ func (p *Program) NewCall(name string, argsC int) {
 
 func (p *Program) Next() {
 	p.opIdx++
+
+	if !p.IsEnd() {
+		return
+	}
+
+	p.FinishBlock()
 }
 
-func (p *Program) Get() *Operation {
-	if p.opIdx > len(p.operations)-1 {
-		lastOpIdx, err := p.trace.Pop()
-		if err != nil {
-			return nil
-		}
-		p.opIdx = *lastOpIdx
-
-		return p.Get()
+func (p *Program) Current() *Operation {
+	if p.IsEnd() {
+		return nil
 	}
 
 	return p.operations[p.opIdx]
 }
 
 func (p *Program) TraceBack() {
-	idx := p.opIdx
+	idx := p.opIdx + 1
 
 	p.trace.Push(&idx)
 }
@@ -133,8 +133,6 @@ func (p *Program) ToProgramBegin() error {
 	if err := p.ToMark("#MAIN"); err != nil {
 		return err
 	}
-
-	p.Skip(1)
 
 	return nil
 }
@@ -158,8 +156,14 @@ func (p *Program) ToMark(name string) error {
 	return fmt.Errorf("markName %s is not found", name)
 }
 
-func (p *Program) Finish() {
-	p.opIdx = len(p.operations)
+func (p *Program) FinishBlock() {
+	lastOpIdx, err := p.trace.Pop()
+	if err != nil {
+		p.opIdx = len(p.operations)
+
+		return
+	}
+	p.opIdx = *lastOpIdx
 }
 
 func (p *Program) String() string {
@@ -174,4 +178,8 @@ func (p *Program) String() string {
 
 func (p *Program) StringStatement() string {
 	return fmt.Sprintf("op: %d trace: %s", p.opIdx, p.trace.ToString(func(n int) string { return strconv.Itoa(n) }))
+}
+
+func (p *Program) IsEnd() bool {
+	return p.opIdx > len(p.operations)-1
 }

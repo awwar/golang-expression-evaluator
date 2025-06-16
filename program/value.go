@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"expression_parser/utility"
 )
@@ -196,6 +197,10 @@ func (v *Value) IsBoolean() bool {
 
 func (v *Value) IsAtom() bool {
 	return v.ValueType == Atom
+}
+
+func (v *Value) IsVariable() bool {
+	return v.IsAtom() && strings.HasPrefix(*v.StringVal, "$")
 }
 
 func (v *Value) IsMinusOrPlus() bool {

@@ -20,7 +20,7 @@ func (i *If) Compile(program *program.Program, node *parser.Node, subcompile fun
 
 	program.NewCSKP(2)
 	program.NewJMP(*node.Params[2].Value.StringVal)
-	program.NewCSKP(1)
+	program.NewSKP(1)
 	program.NewJMP(*node.Params[1].Value.StringVal)
 
 	return nil

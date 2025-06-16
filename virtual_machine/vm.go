@@ -17,7 +17,9 @@ func Execute(pr *program.Program) error {
 	}
 
 	for {
-		op := pr.Get()
+		pr.Next()
+
+		op := pr.Current()
 		if op == nil {
 			break
 		}
@@ -32,16 +34,7 @@ func Execute(pr *program.Program) error {
 			return err
 		}
 
-		fmt.Println(
-			fmt.Sprintf(
-				"> %s %s %s",
-				op.String(),
-				stack.ToString(func(v program.Value) string { return v.String() }),
-				pr.StringStatement(),
-			),
-		)
-
-		pr.Next()
+		debug(op, stack, pr)
 	}
 
 	if !stack.IsEmpty() {
@@ -49,4 +42,15 @@ func Execute(pr *program.Program) error {
 	}
 
 	return nil
+}
+
+func debug(op *program.Operation, stack *utility.Stack[program.Value], pr *program.Program) {
+	fmt.Println(
+		fmt.Sprintf(
+			"> %s %s %s",
+			op.String(),
+			stack.ToString(func(v program.Value) string { return v.String() }),
+			pr.StringStatement(),
+		),
+	)
 }

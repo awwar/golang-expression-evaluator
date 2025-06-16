@@ -12,9 +12,8 @@ func init() {
 }
 
 func Jmp(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]*program.Value) error {
-	op := pr.Get()
+	op := pr.Current()
 
-	//pr.Skip(1)
 	pr.TraceBack()
 
 	markName, ok := op.Params[0].(string)

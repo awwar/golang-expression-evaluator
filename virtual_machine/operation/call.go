@@ -13,16 +13,18 @@ func init() {
 }
 
 func Call(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
-	op := pr.Get()
+	op := pr.Current()
 
 	procedureName, ok := op.Params[0].(string)
 	if !ok {
 		return fmt.Errorf("CALL 1 param is not a string")
 	}
+
 	argc, ok := op.Params[1].(int)
 	if !ok {
 		return fmt.Errorf("CALL 2 param is not a int")
 	}
+
 	proc, ok := procedure.Map[procedureName]
 	if !ok {
 		return fmt.Errorf("CALL procedure `%s` is not found", procedureName)

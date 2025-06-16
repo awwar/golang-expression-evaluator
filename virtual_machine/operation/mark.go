@@ -10,7 +10,8 @@ func init() {
 }
 
 func Mark(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]*program.Value) error {
-	pr.Finish()
+	pr.FinishBlock()
+	pr.Skip(-1)
 
 	return nil
 }

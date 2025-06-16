@@ -13,12 +13,13 @@ func init() {
 }
 
 func Skip(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
-	op := pr.Get()
+	op := pr.Current()
 
 	n, ok := op.Params[0].(int)
 	if !ok {
 		return fmt.Errorf("SKIP param is not a int")
 	}
+
 	pr.Skip(n)
 
 	return nil

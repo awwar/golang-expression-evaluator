@@ -12,13 +12,14 @@ func init() {
 }
 
 func Push(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
-	op := pr.Get()
+	op := pr.Current()
 
 	v, ok := op.Params[0].(program.Value)
 	if !ok {
 		return fmt.Errorf("PUSH param is not a *value")
 	}
-	if v.IsAtom() {
+
+	if v.IsVariable() {
 		stack.Push(memo[*v.StringVal])
 	} else {
 		stack.Push(&v)

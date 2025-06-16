@@ -30,7 +30,7 @@ func (o *Out) Execute(argc int, stack *utility.Stack[program.Value]) error {
 		return err
 	}
 
-	fmt.Printf("%s", *operandAsString.StringVal)
+	fmt.Println(*operandAsString.StringVal)
 
 	return nil
 }
