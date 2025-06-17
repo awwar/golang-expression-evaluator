@@ -7,6 +7,18 @@ import (
 	"expression_parser/utility"
 )
 
+var (
+	ProcedureParserMap = map[string]ProcedureParser{}
+)
+
+func AddProcedureParser(name string, parser ProcedureParser) {
+	ProcedureParserMap[name] = parser
+}
+
+type ProcedureParser interface {
+	Parse(token *tokenizer.Token, pr *Parser) (*Node, error)
+}
+
 type Parser struct {
 	firstPosition   int
 	lastPosition    int
@@ -57,7 +69,7 @@ func (p *Parser) ParseProgram() (*Node, error) {
 	return CreateAsProgram(list.Result()), nil
 }
 
-func (p *Parser) subparseExpression() ([]*Node, error) {
+func (p *Parser) subparseExpressions() ([]*Node, error) {
 	list := &NodeList{}
 
 	for {
@@ -72,7 +84,7 @@ func (p *Parser) subparseExpression() ([]*Node, error) {
 		if token.Type == tokenizer.TypeSemicolon {
 			subParser := New(p.stream, p.currentPosition+1, p.lastPosition)
 
-			subNodes, err := subParser.subparseExpression()
+			subNodes, err := subParser.subparseExpressions()
 			if err != nil {
 				return nil, err
 			}
@@ -101,7 +113,7 @@ func (p *Parser) subparseExpression() ([]*Node, error) {
 
 		if token.Type == tokenizer.TypeBrackets {
 			p.currentPosition--
-			subNode, err := p.subparseOneInBracers()
+			subNode, err := p.SubparseOneInBracers()
 			if err != nil {
 				return nil, err
 			}
@@ -178,44 +190,7 @@ func (p *Parser) subparseExpression() ([]*Node, error) {
 	return list.Result(), nil
 }
 
-func (p *Parser) subparseListInBracers() ([]*Node, error) {
-	p.currentPosition++
-
-	openBracer := p.stream.Get(p.currentPosition)
-
-	if openBracer == nil || openBracer.Type != tokenizer.TypeBrackets {
-		errorToken := p.stream.Get(p.currentPosition - 1)
-
-		return nil, p.error(errorToken.Position, "word token uses only in function context")
-	}
-
-	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
-
-	if endPosition == -1 {
-		currentToken := p.stream.Get(p.currentPosition)
-
-		return nil, p.error(currentToken.Position, "cant find closed bracer")
-	}
-
-	var subNodes []*Node
-	var err error
-
-	if p.currentPosition != endPosition-1 {
-		subParser := New(p.stream, p.currentPosition+1, endPosition-1)
-
-		subNodes, err = subParser.subparseExpression()
-	}
-
-	p.currentPosition = endPosition
-
-	if err != nil {
-		return nil, err
-	}
-
-	return subNodes, nil
-}
-
-func (p *Parser) subparseOneInBracers() (*Node, error) {
+func (p *Parser) SubparseOneInBracers() (*Node, error) {
 	subNodes, err := p.subparseListInBracers()
 	if err != nil {
 		return nil, err
@@ -234,50 +209,7 @@ func (p *Parser) subparseOneInBracers() (*Node, error) {
 	return subNodes[0], nil
 }
 
-func (p *Parser) subparseNode() (*Node, error) {
-	token := p.stream.Get(p.currentPosition)
-
-	if token.Type != tokenizer.TypeWord {
-		return nil, p.error(token.Position, "node declaration must start with node name")
-	}
-
-	switch token.Value {
-	case "VAR":
-		variableNode, err := p.subparseVariableName()
-		if err != nil {
-			return nil, err
-		}
-		expression, err := p.subparseOneInBracers()
-		if err != nil {
-			return nil, err
-		}
-		return CreateAsOperation(token.Value, []*Node{variableNode, expression}, token.Position), nil
-	case "IF":
-		expression, err := p.subparseOneInBracers()
-		if err != nil {
-			return nil, err
-		}
-		trueHashLink, err := p.subparseFlowLink()
-		if err != nil {
-			return nil, err
-		}
-		falseHashLinks, err := p.subparseFlowLink()
-		if err != nil {
-			return nil, err
-		}
-		return CreateAsOperation(token.Value, []*Node{expression, trueHashLink, falseHashLinks}, token.Position), nil
-	case "PRINT":
-		expression, err := p.subparseOneInBracers()
-		if err != nil {
-			return nil, err
-		}
-		return CreateAsOperation(token.Value, []*Node{expression}, token.Position), nil
-	}
-
-	return nil, p.error(token.Position, fmt.Sprintf("unknown operation %s", token.Value))
-}
-
-func (p *Parser) subparseVariableName() (*Node, error) {
+func (p *Parser) SubparseVariableName() (*Node, error) {
 	p.currentPosition++
 	token := p.stream.Get(p.currentPosition)
 
@@ -292,6 +224,21 @@ func (p *Parser) subparseVariableName() (*Node, error) {
 	return CreateAsVariable(token.Value, token.Position), nil
 }
 
+func (p *Parser) SubparseFlowLink() (*Node, error) {
+	p.currentPosition++
+	token := p.stream.Get(p.currentPosition)
+
+	if token.Type != tokenizer.TypeWord {
+		return nil, p.error(token.Position, "hash links declaration must start with node name")
+	}
+
+	if !token.StartsWith("#") {
+		return nil, p.error(token.Position, "hash links declaration must start with #")
+	}
+
+	return CreateAsFlowLink(token.Value, token.Position), nil
+}
+
 func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 	token := p.stream.Get(p.currentPosition)
 
@@ -301,6 +248,24 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 
 	if token.Type != tokenizer.TypeWord {
 		return nil, p.error(token.Position, "hash links declaration must start with node name")
+	}
+
+	if token.StartsWith(":") {
+		if token.Value != ":META" {
+			return nil, p.error(token.Position, "only meta tokens start with ':'")
+		}
+
+		metaName, err := p.subparseWord()
+		if err != nil {
+			return nil, err
+		}
+
+		metaValue, err := p.subparseWord()
+		if err != nil {
+			return nil, err
+		}
+
+		return CreateAsFlowMetadata(metaName, metaValue, token.Position), nil
 	}
 
 	if !token.StartsWith("#") {
@@ -328,19 +293,68 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 	return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
 }
 
-func (p *Parser) subparseFlowLink() (*Node, error) {
-	p.currentPosition++
+func (p *Parser) subparseNode() (*Node, error) {
 	token := p.stream.Get(p.currentPosition)
 
 	if token.Type != tokenizer.TypeWord {
-		return nil, p.error(token.Position, "hash links declaration must start with node name")
+		return nil, p.error(token.Position, "node declaration must start with node name")
 	}
 
-	if !token.StartsWith("#") {
-		return nil, p.error(token.Position, "hash links declaration must start with #")
+	proc, ok := ProcedureParserMap[token.Value]
+	if !ok {
+		return nil, p.error(token.Position, fmt.Sprintf("unknown operation %s", token.Value))
 	}
 
-	return CreateAsFlowLink(token.Value, token.Position), nil
+	return proc.Parse(token, p)
+}
+
+func (p *Parser) subparseListInBracers() ([]*Node, error) {
+	p.currentPosition++
+
+	openBracer := p.stream.Get(p.currentPosition)
+
+	if openBracer == nil || openBracer.Type != tokenizer.TypeBrackets {
+		errorToken := p.stream.Get(p.currentPosition - 1)
+
+		return nil, p.error(errorToken.Position, "word token uses only in function context")
+	}
+
+	endPosition := p.stream.SearchIdxOfClosedBracer(p.currentPosition)
+
+	if endPosition == -1 {
+		currentToken := p.stream.Get(p.currentPosition)
+
+		return nil, p.error(currentToken.Position, "cant find closed bracer")
+	}
+
+	var subNodes []*Node
+	var err error
+
+	if p.currentPosition != endPosition-1 {
+		subParser := New(p.stream, p.currentPosition+1, endPosition-1)
+
+		subNodes, err = subParser.subparseExpressions()
+	}
+
+	p.currentPosition = endPosition
+
+	if err != nil {
+		return nil, err
+	}
+
+	return subNodes, nil
+}
+
+func (p *Parser) subparseWord() (*Node, error) {
+	p.currentPosition++
+
+	word := p.stream.Get(p.currentPosition)
+
+	if word == nil || word.Type != tokenizer.TypeWord {
+		return nil, p.error(p.lastPosition, "expected word token")
+	}
+
+	return CreateAsConstant(word.Value, p.lastPosition), nil
 }
 
 func (p *Parser) error(pos int, message string) error {

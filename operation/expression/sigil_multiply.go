@@ -1,18 +1,19 @@
-package procedure
+package expression
 
 import (
 	"errors"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure("*", &SigilMultiply{})
+	operation.AppendExpression("*", &SigilMultiply{})
 }
 
 type SigilMultiply struct {
-	CommonProcedure
+	operation.CommonExpression
 }
 
 func (s *SigilMultiply) Execute(argc int, stack *utility.Stack[program.Value]) error {

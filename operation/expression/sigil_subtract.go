@@ -1,18 +1,19 @@
-package procedure
+package expression
 
 import (
 	"errors"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure("-", &SigilSubtract{})
+	operation.AppendExpression("-", &SigilSubtract{})
 }
 
 type SigilSubtract struct {
-	CommonProcedure
+	operation.CommonExpression
 }
 
 func (s *SigilSubtract) Execute(argc int, stack *utility.Stack[program.Value]) error {

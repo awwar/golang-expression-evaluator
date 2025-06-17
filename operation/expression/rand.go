@@ -1,19 +1,20 @@
-package procedure
+package expression
 
 import (
 	"fmt"
 	"math/rand"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure("rand", &Rand{})
+	operation.AppendExpression("rand", &Rand{})
 }
 
 type Rand struct {
-	CommonProcedure
+	operation.CommonExpression
 }
 
 func (r *Rand) Execute(argc int, stack *utility.Stack[program.Value]) error {

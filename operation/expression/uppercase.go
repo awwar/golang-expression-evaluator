@@ -1,22 +1,23 @@
-package procedure
+package expression
 
 import (
 	"errors"
 	"strings"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure("trim_space", &TrimSpace{})
+	operation.AppendExpression("uppercase", &Uppercase{})
 }
 
-type TrimSpace struct {
-	CommonProcedure
+type Uppercase struct {
+	operation.CommonExpression
 }
 
-func (t *TrimSpace) Execute(argc int, stack *utility.Stack[program.Value]) error {
+func (u *Uppercase) Execute(argc int, stack *utility.Stack[program.Value]) error {
 	if argc != 1 {
 		return errors.New("sigil add: wrong number of arguments")
 	}
@@ -26,7 +27,7 @@ func (t *TrimSpace) Execute(argc int, stack *utility.Stack[program.Value]) error
 		return err
 	}
 
-	strVal := strings.TrimSpace(*firstOperand.StringVal)
+	strVal := strings.ToUpper(*firstOperand.StringVal)
 
 	stack.Push(program.NewString(strVal))
 

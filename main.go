@@ -6,6 +6,10 @@ import (
 
 	"expression_parser/compiler"
 	"expression_parser/parser"
+	// ToDo: find another way to deal with autowiring
+	_ "expression_parser/operation"
+	_ "expression_parser/operation/expression"
+	_ "expression_parser/operation/node"
 	"expression_parser/tokenizer"
 	"expression_parser/utility"
 	"expression_parser/virtual_machine"

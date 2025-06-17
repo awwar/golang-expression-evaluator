@@ -1,3 +1,6 @@
+:META name  LOTTERY
+:META input float
+
 #MAIN
 VAR $SOME_VALUE (32)
 

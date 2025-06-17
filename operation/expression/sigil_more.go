@@ -1,18 +1,19 @@
-package procedure
+package expression
 
 import (
 	"errors"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure(">", &SigilMore{})
+	operation.AppendExpression(">", &SigilMore{})
 }
 
 type SigilMore struct {
-	CommonProcedure
+	operation.CommonExpression
 }
 
 func (s *SigilMore) Execute(argc int, stack *utility.Stack[program.Value]) error {

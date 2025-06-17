@@ -1,18 +1,19 @@
-package procedure
+package expression
 
 import (
 	"errors"
 
+	"expression_parser/operation"
 	"expression_parser/program"
 	"expression_parser/utility"
 )
 
 func init() {
-	AppendProcedure("/", &SigilDivide{})
+	operation.AppendExpression("/", &SigilDivide{})
 }
 
 type SigilDivide struct {
-	CommonProcedure
+	operation.CommonExpression
 }
 
 func (s *SigilDivide) Execute(argc int, stack *utility.Stack[program.Value]) error {

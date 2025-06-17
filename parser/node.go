@@ -15,6 +15,7 @@ const (
 	TypeVariable        = iota
 	TypeFlowLink        = iota
 	TypeFlowDeclaration = iota
+	TypeFlowMetadata    = iota
 	TypeProgram         = iota
 )
 
@@ -42,6 +43,19 @@ func CreateAsProgram(params []*Node) *Node {
 	}
 
 	return node
+}
+
+func CreateAsConstant(value string, tokenPosition int) *Node {
+	return &Node{
+		Type: TypeConstant,
+		Value: &program.Value{
+			ValueType: program.Atom,
+			StringVal: &value,
+		},
+		Params:        make([]*Node, 0),
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
 }
 
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
@@ -108,6 +122,19 @@ func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *N
 			StringVal: &value,
 		},
 		Params:        params,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowMetadata(name *Node, value *Node, tokenPosition int) *Node {
+	return &Node{
+		Type: TypeFlowMetadata,
+		Value: &program.Value{
+			ValueType: program.Atom,
+			StringVal: utility.AsPtr(":META"),
+		},
+		Params:        []*Node{name, value},
 		Priority:      4,
 		TokenPosition: tokenPosition,
 	}
