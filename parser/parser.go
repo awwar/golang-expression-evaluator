@@ -95,12 +95,16 @@ func (p *Parser) subparseExpressions() ([]*Node, error) {
 		}
 
 		if token.Type == tokenizer.TypeWord {
-			if token.StartsWith("$") {
+			if token.StartsWith("#") {
+				node := CreateAsFlowLink(token.Value, token.Position)
+
+				list.Push(node)
+			} else if token.StartsWith("$") {
 				node := CreateAsVariable(token.Value, token.Position)
 
 				list.Push(node)
 			} else {
-				subNodes, err := p.subparseListInBracers()
+				subNodes, err := p.SubparseListInBracers(-1)
 				if err != nil {
 					return nil, err
 				}
@@ -191,19 +195,9 @@ func (p *Parser) subparseExpressions() ([]*Node, error) {
 }
 
 func (p *Parser) SubparseOneInBracers() (*Node, error) {
-	subNodes, err := p.subparseListInBracers()
+	subNodes, err := p.SubparseListInBracers(1)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(subNodes) != 1 {
-		for _, rt := range subNodes {
-			fmt.Println(rt.String(0))
-		}
-
-		token := p.stream.Get(p.currentPosition)
-
-		return nil, p.error(token.Position-1, "stand-alone brackets should frame exactly one node")
 	}
 
 	return subNodes[0], nil
@@ -268,29 +262,30 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 		return CreateAsFlowMetadata(metaName, metaValue, token.Position), nil
 	}
 
-	if !token.StartsWith("#") {
-		return nil, p.error(token.Position, "flow declaration must start with #")
-	}
+	if token.StartsWith("#") {
+		subNodes := NodeList{}
 
-	subNodes := NodeList{}
-	for {
-		p.currentPosition++
-		nextToken := p.stream.Get(p.currentPosition)
+		for {
+			p.currentPosition++
+			nextToken := p.stream.Get(p.currentPosition)
 
-		if nextToken == nil || nextToken.StartsWith("#") {
-			p.currentPosition--
-			break
+			if nextToken == nil || nextToken.StartsWith("#") {
+				p.currentPosition--
+				break
+			}
+
+			subNodeNode, err := p.subparseNode()
+			if err != nil {
+				return nil, err
+			}
+
+			subNodes.Push(subNodeNode)
 		}
 
-		subNodeNode, err := p.subparseNode()
-		if err != nil {
-			return nil, err
-		}
-
-		subNodes.Push(subNodeNode)
+		return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
 	}
 
-	return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
+	return nil, p.error(token.Position, "flow declaration must start with #")
 }
 
 func (p *Parser) subparseNode() (*Node, error) {
@@ -308,7 +303,7 @@ func (p *Parser) subparseNode() (*Node, error) {
 	return proc.Parse(token, p)
 }
 
-func (p *Parser) subparseListInBracers() ([]*Node, error) {
+func (p *Parser) SubparseListInBracers(n int) ([]*Node, error) {
 	p.currentPosition++
 
 	openBracer := p.stream.Get(p.currentPosition)
@@ -327,20 +322,23 @@ func (p *Parser) subparseListInBracers() ([]*Node, error) {
 		return nil, p.error(currentToken.Position, "cant find closed bracer")
 	}
 
-	var subNodes []*Node
+	subNodes := []*Node{}
 	var err error
 
 	if p.currentPosition != endPosition-1 {
 		subParser := New(p.stream, p.currentPosition+1, endPosition-1)
 
 		subNodes, err = subParser.subparseExpressions()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if n >= 0 && len(subNodes) != n {
+		return nil, p.error(p.currentPosition+1, fmt.Sprintf("expected %d nodes, got %d", n, len(subNodes)))
 	}
 
 	p.currentPosition = endPosition
-
-	if err != nil {
-		return nil, err
-	}
 
 	return subNodes, nil
 }

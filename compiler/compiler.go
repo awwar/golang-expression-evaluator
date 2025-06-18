@@ -28,8 +28,7 @@ type Compiler struct {
 }
 
 func (c *Compiler) Compile(node *parser.Node) (*program.Program, error) {
-	err := c.doCompile(node)
-	if err != nil {
+	if err := c.doCompile(node); err != nil {
 		return nil, err
 	}
 
@@ -48,11 +47,12 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 	}
 
 	return c.subCompile(node)
-
 }
 
 func (c *Compiler) subCompile(node *parser.Node) error {
 	if node.Type == parser.TypeFlowMetadata {
+		c.program.NewMeta(*node.Params[0].Value.StringVal, *node.Params[1].Value.StringVal)
+
 		return nil
 	}
 

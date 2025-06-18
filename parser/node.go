@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	TypeOperation       = iota
-	TypeConstant        = iota
-	TypeVariable        = iota
-	TypeFlowLink        = iota
-	TypeFlowDeclaration = iota
-	TypeFlowMetadata    = iota
-	TypeProgram         = iota
+	TypeOperation       int = iota
+	TypeConstant        int = iota
+	TypeVariable        int = iota
+	TypeFlowLink        int = iota
+	TypeFlowDeclaration int = iota
+	TypeFlowMetadata    int = iota
+	TypeProgram         int = iota
 )
 
 var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
@@ -30,19 +30,16 @@ type Node struct {
 }
 
 func CreateAsProgram(params []*Node) *Node {
-	name := "root"
-	node := &Node{
+	return &Node{
 		Type: TypeProgram,
 		Value: &program.Value{
 			ValueType: program.Atom,
-			StringVal: &name,
+			StringVal: utility.AsPtr("root"),
 		},
 		Params:        params,
 		Priority:      4,
 		TokenPosition: 0,
 	}
-
-	return node
 }
 
 func CreateAsConstant(value string, tokenPosition int) *Node {
@@ -242,4 +239,8 @@ func (f *Node) IsNumber() bool {
 
 func (f *Node) IsMinusOrPlus() bool {
 	return f.Value.IsMinusOrPlus()
+}
+
+func (f *Node) IsFlowLink() bool {
+	return f.Type == TypeFlowLink
 }

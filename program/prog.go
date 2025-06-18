@@ -47,6 +47,7 @@ func NewProgram() *Program {
 }
 
 type Program struct {
+	Name       string
 	operations []*Operation
 	trace      *utility.Stack[int]
 	opIdx      int
@@ -57,6 +58,12 @@ func (p *Program) NewMark(markName string) {
 		Name:   MARK,
 		Params: []any{markName},
 	})
+}
+
+func (p *Program) NewMeta(metaName string, metaValue string) {
+	if metaName == "name" {
+		p.Name = metaValue
+	}
 }
 
 func (p *Program) NewPush(value Value) {
@@ -130,11 +137,7 @@ func (p *Program) Skip(n int) {
 }
 
 func (p *Program) ToProgramBegin() error {
-	if err := p.ToMark("#MAIN"); err != nil {
-		return err
-	}
-
-	return nil
+	return p.ToMark("#" + p.Name)
 }
 
 func (p *Program) ToMark(name string) error {

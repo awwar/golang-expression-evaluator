@@ -1,17 +1,22 @@
 :META name  LOTTERY
 :META input float
 
-#MAIN
-VAR $SOME_VALUE (32)
+#LOTTERY
+VAR (32) $SOME_VALUE
 
-IF (rand() > 0.5) #MORE #LESS
+CALL #RAND $RAND_RESULT
 
-PRINT (" Try Next?")
+IF ($RAND_RESULT > 0.5) (#MORE, #LESS)
+
+PRINT ("Try Next?")
 
 #MORE
 PRINT ("you're WIN!")
 
 #LESS
-VAR $OUT_RESULT (sum("you're lose ", $SOME_VALUE, " points!"))
+VAR (sum("you're lose ", $SOME_VALUE, " points!")) $OUT_RESULT
 
 PRINT ($OUT_RESULT)
+
+#RAND
+RETURN (rand())

@@ -17,12 +17,12 @@ type Var struct {
 }
 
 func (i *Var) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, error) {
-	variableNode, err := pr.SubparseVariableName()
+	expression, err := pr.SubparseOneInBracers()
 	if err != nil {
 		return nil, err
 	}
 
-	expression, err := pr.SubparseOneInBracers()
+	variableNode, err := pr.SubparseVariableName()
 	if err != nil {
 		return nil, err
 	}
