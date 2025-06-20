@@ -34,7 +34,7 @@ func Execute(pr *program.Program) error {
 			return err
 		}
 
-		// debug(op, stack, pr)
+		debug(op, stack, pr)
 	}
 
 	if !stack.IsEmpty() {

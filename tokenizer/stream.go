@@ -29,7 +29,7 @@ func (t *TokenStream) Get(index int) *Token {
 }
 
 func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
-	var bracersCount int = 0
+	var bracketsCount int = 0
 	var currenPosition int = startBracer
 
 	for {
@@ -42,12 +42,12 @@ func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
 		token := *value
 
 		if token.Value == "(" {
-			bracersCount++
+			bracketsCount++
 		} else if token.Value == ")" {
-			bracersCount--
+			bracketsCount--
 		}
 
-		if bracersCount == 0 {
+		if bracketsCount == 0 {
 			return currenPosition
 		}
 

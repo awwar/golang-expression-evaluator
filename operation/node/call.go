@@ -23,15 +23,32 @@ func (i *Call) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, e
 		return nil, err
 	}
 
+	args, err := pr.SubparseListInBracers(-1)
+	if err != nil {
+		return nil, err
+	}
+
 	variable, err := pr.SubparseVariableName()
 	if err != nil {
 		return nil, err
 	}
 
-	return parser.CreateAsOperation(token.Value, []*parser.Node{link, variable}, token.Position), nil
+	subnodes := []*parser.Node{link, variable}
+
+	subnodes = append(subnodes, args...)
+
+	return parser.CreateAsOperation(token.Value, subnodes, token.Position), nil
 }
 
 func (i *Call) Compile(program *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
+
+	for _, a := range node.Params[2:] {
+		err := subcompile(a)
+		if err != nil {
+			return err
+		}
+	}
+
 	program.NewJMP(*node.Params[0].Value.StringVal)
 	program.NewVariable(*node.Params[1].Value.StringVal)
 

@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	TypeOperation       int = iota
-	TypeConstant        int = iota
-	TypeVariable        int = iota
-	TypeFlowLink        int = iota
-	TypeFlowDeclaration int = iota
-	TypeFlowMetadata    int = iota
-	TypeProgram         int = iota
+	TypeOperation               int = iota
+	TypeConstant                int = iota
+	TypeVariable                int = iota
+	TypeFlowLink                int = iota
+	TypeFlowDeclaration         int = iota
+	TypeFlowBranchesDeclaration int = iota
+	TypeProgram                 int = iota
 )
 
 var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
@@ -124,14 +124,14 @@ func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *N
 	}
 }
 
-func CreateAsFlowMetadata(name *Node, value *Node, tokenPosition int) *Node {
+func CreateAsFlowBranchesDeclaration(value string, params []*Node, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeFlowMetadata,
+		Type: TypeFlowBranchesDeclaration,
 		Value: &program.Value{
 			ValueType: program.Atom,
-			StringVal: utility.AsPtr(":META"),
+			StringVal: &value,
 		},
-		Params:        []*Node{name, value},
+		Params:        params,
 		Priority:      4,
 		TokenPosition: tokenPosition,
 	}

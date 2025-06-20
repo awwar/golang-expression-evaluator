@@ -1,14 +1,16 @@
-:META name  LOTTERY
-:META input float
+#MAIN
+CALL #LOTTERY () $LOTTERY_RESULT
 
-#LOTTERY
+#LOTTERY() void
 VAR (32) $SOME_VALUE
 
-CALL #RAND $RAND_RESULT
+CALL #FLIP_COIN (0.5) $FLIP_COIN_RESULT
 
-IF ($RAND_RESULT > 0.5) (#MORE, #LESS)
+IF ($FLIP_COIN_RESULT) (#MORE, #LESS)
 
 PRINT ("Try Next?")
+
+RETURN (0)
 
 #MORE
 PRINT ("you're WIN!")
@@ -18,5 +20,5 @@ VAR (sum("you're lose ", $SOME_VALUE, " points!")) $OUT_RESULT
 
 PRINT ($OUT_RESULT)
 
-#RAND
-RETURN (rand())
+#FLIP_COIN(float()) float
+RETURN (rand() > $FLIP_COIN_ARG0)

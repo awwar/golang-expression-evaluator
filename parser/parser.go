@@ -244,26 +244,29 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 		return nil, p.error(token.Position, "hash links declaration must start with node name")
 	}
 
-	if token.StartsWith(":") {
-		if token.Value != ":META" {
-			return nil, p.error(token.Position, "only meta tokens start with ':'")
-		}
-
-		metaName, err := p.subparseWord()
-		if err != nil {
-			return nil, err
-		}
-
-		metaValue, err := p.subparseWord()
-		if err != nil {
-			return nil, err
-		}
-
-		return CreateAsFlowMetadata(metaName, metaValue, token.Position), nil
-	}
-
 	if token.StartsWith("#") {
 		subNodes := NodeList{}
+
+		isFlowDeclaration := false
+
+		nextToken := p.stream.Get(p.currentPosition + 1)
+		if nextToken.Type == tokenizer.TypeBrackets {
+			args, err := p.SubparseListInBracers(-1)
+			if err != nil {
+				return nil, err
+			}
+
+			subNodes.Push(&Node{Params: args})
+
+			returnParam, err := p.subparseWord()
+			if err != nil {
+				return nil, err
+			}
+
+			subNodes.Push(returnParam)
+
+			isFlowDeclaration = true
+		}
 
 		for {
 			p.currentPosition++
@@ -282,10 +285,15 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 			subNodes.Push(subNodeNode)
 		}
 
-		return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
+		if isFlowDeclaration {
+			return CreateAsFlowDeclaration(token.Value, subNodes.Result(), token.Position), nil
+		} else {
+			return CreateAsFlowBranchesDeclaration(token.Value, subNodes.Result(), token.Position), nil
+		}
+
 	}
 
-	return nil, p.error(token.Position, "flow declaration must start with #")
+	return nil, p.error(token.Position, "flow declaration must start with # and has argument and return value")
 }
 
 func (p *Parser) subparseNode() (*Node, error) {
@@ -319,7 +327,7 @@ func (p *Parser) SubparseListInBracers(n int) ([]*Node, error) {
 	if endPosition == -1 {
 		currentToken := p.stream.Get(p.currentPosition)
 
-		return nil, p.error(currentToken.Position, "cant find closed bracer")
+		return nil, p.error(currentToken.Position, "cant find closed bracket")
 	}
 
 	subNodes := []*Node{}

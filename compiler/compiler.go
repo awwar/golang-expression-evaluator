@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"strings"
 
 	"expression_parser/parser"
 	"expression_parser/program"
@@ -50,13 +51,20 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 }
 
 func (c *Compiler) subCompile(node *parser.Node) error {
-	if node.Type == parser.TypeFlowMetadata {
-		c.program.NewMeta(*node.Params[0].Value.StringVal, *node.Params[1].Value.StringVal)
+	if node.Type == parser.TypeFlowDeclaration {
+		args := node.Params[0]
+		_ = node.Params[1]
 
-		return nil
+		node.Params = node.Params[2:]
+
+		c.program.NewMark(*node.Value.StringVal)
+
+		for i, _ := range args.Params {
+			c.program.NewVariable(fmt.Sprintf("$%s_ARG%d", strings.TrimLeft(*node.Value.StringVal, "#"), i))
+		}
 	}
 
-	if node.Type == parser.TypeFlowDeclaration {
+	if node.Type == parser.TypeFlowBranchesDeclaration {
 		c.program.NewMark(*node.Value.StringVal)
 	}
 
