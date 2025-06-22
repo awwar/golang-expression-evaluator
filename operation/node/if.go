@@ -37,8 +37,8 @@ func (i *If) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, err
 	return parser.CreateAsOperation(token.Value, []*parser.Node{expression, hashLinks[0], hashLinks[1]}, token.Position), nil
 }
 
-func (i *If) Compile(program *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
-	if err := subcompile(node.Params[0]); err != nil {
+func (i *If) Compile(program *program.Program, node *parser.Node, cmp compiler.Subcompiler) error {
+	if err := cmp.SubCompile(node.Params[0]); err != nil {
 		return err
 	}
 

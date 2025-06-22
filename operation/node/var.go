@@ -30,8 +30,8 @@ func (i *Var) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, er
 	return parser.CreateAsOperation(token.Value, []*parser.Node{variableNode, expression}, token.Position), nil
 }
 
-func (i *Var) Compile(program *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
-	if err := subcompile(node.Params[1]); err != nil {
+func (i *Var) Compile(program *program.Program, node *parser.Node, cmp compiler.Subcompiler) error {
+	if err := cmp.SubCompile(node.Params[1]); err != nil {
 		return err
 	}
 

@@ -42,8 +42,8 @@ func (c *CommonProcedure) Execute(_ int, _ *utility.Stack[program.Value]) error 
 	return nil
 }
 
-func (c *CommonProcedure) Compile(_ *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
-	return subcompile(node)
+func (c *CommonProcedure) Compile(_ *program.Program, node *parser.Node, cmp compiler.Subcompiler) error {
+	return cmp.SubCompile(node)
 }
 
 type CommonExpression struct {

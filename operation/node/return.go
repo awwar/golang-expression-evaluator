@@ -26,6 +26,6 @@ func (i *Return) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node,
 	return parser.CreateAsOperation(token.Value, []*parser.Node{expr}, token.Position), nil
 }
 
-func (i *Return) Compile(_ *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
-	return subcompile(node.Params[0])
+func (i *Return) Compile(_ *program.Program, node *parser.Node, cmp compiler.Subcompiler) error {
+	return cmp.SubCompile(node.Params[0])
 }

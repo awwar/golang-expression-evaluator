@@ -257,7 +257,7 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 				return nil, err
 			}
 
-			subNodes.Push(&Node{Params: args})
+			subNodes.Push(args...)
 
 			returnParam, err := p.subparseWord()
 			if err != nil {

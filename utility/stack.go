@@ -47,7 +47,11 @@ func (s *Stack[T]) ToString(callback func(T) string) string {
 	sb := strings.Builder{}
 	sb.WriteString("[ ")
 	for _, item := range s.items {
-		sb.WriteString(callback(*item) + " ")
+		if item != nil {
+			sb.WriteString(callback(*item) + " ")
+		} else {
+			sb.WriteString("<nil>")
+		}
 	}
 	sb.WriteString("]")
 

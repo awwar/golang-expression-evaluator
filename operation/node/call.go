@@ -40,10 +40,9 @@ func (i *Call) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, e
 	return parser.CreateAsOperation(token.Value, subnodes, token.Position), nil
 }
 
-func (i *Call) Compile(program *program.Program, node *parser.Node, subcompile compiler.Subcompiler) error {
-
+func (i *Call) Compile(program *program.Program, node *parser.Node, cmp compiler.Subcompiler) error {
 	for _, a := range node.Params[2:] {
-		err := subcompile(a)
+		err := cmp.SubCompile(a)
 		if err != nil {
 			return err
 		}

@@ -2,13 +2,15 @@ package compiler
 
 import (
 	"fmt"
-	"strings"
 
 	"expression_parser/parser"
 	"expression_parser/program"
 )
 
-type Subcompiler func(node *parser.Node) error
+type Subcompiler interface {
+	SubCompile(node *parser.Node) error
+	GetMetadata(key string) string
+}
 
 type OperationSubCompiler interface {
 	Compile(program *program.Program, node *parser.Node, subcompile Subcompiler) error
@@ -25,7 +27,12 @@ func NewCompiler() *Compiler {
 }
 
 type Compiler struct {
-	program *program.Program
+	program  *program.Program
+	metadata map[string]string
+}
+
+func (c *Compiler) GetMetadata(key string) string {
+	return c.metadata[key]
 }
 
 func (c *Compiler) Compile(node *parser.Node) (*program.Program, error) {
@@ -43,24 +50,43 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 
 	if node.Type == parser.TypeOperation {
 		if proc, ok := OperationSubCompilerMap[*node.Value.StringVal]; ok {
-			return proc.Compile(c.program, node, c.subCompile)
+			return proc.Compile(c.program, node, c)
 		}
 	}
 
-	return c.subCompile(node)
+	return c.SubCompile(node)
 }
 
-func (c *Compiler) subCompile(node *parser.Node) error {
+func (c *Compiler) SubCompile(node *parser.Node) error {
 	if node.Type == parser.TypeFlowDeclaration {
-		args := node.Params[0]
-		_ = node.Params[1]
-
-		node.Params = node.Params[2:]
+		returnType := ""
+		bodyIndex := 0
 
 		c.program.NewMark(*node.Value.StringVal)
 
-		for i, _ := range args.Params {
-			c.program.NewVariable(fmt.Sprintf("$%s_ARG%d", strings.TrimLeft(*node.Value.StringVal, "#"), i))
+		for i, n := range node.Params {
+			bodyIndex = i
+
+			if n.Type == parser.TypeConstant {
+				returnType = *n.Value.StringVal
+
+				break
+			}
+
+			c.program.NewCall(*n.Value.StringVal, len(n.Params))
+			if len(n.Params) == 1 {
+				c.program.NewVariable(*n.Params[0].Value.StringVal)
+			}
+		}
+
+		if returnType == "" {
+			return fmt.Errorf("flow declaration must contain response")
+		}
+
+		node.Params = node.Params[bodyIndex+1:]
+
+		if err := checkLastOperationForReturn(node); err != nil {
+			return err
 		}
 	}
 
@@ -84,6 +110,20 @@ func (c *Compiler) subCompile(node *parser.Node) error {
 
 	if node.Type == parser.TypeConstant {
 		c.program.NewPush(*node.Value)
+	}
+
+	return nil
+}
+
+func checkLastOperationForReturn(node *parser.Node) error {
+	if len(node.Params) == 0 {
+		return fmt.Errorf("flow must contain at least one operation")
+	}
+
+	lastBodyNode := node.Params[len(node.Params)-1]
+
+	if lastBodyNode.Type != parser.TypeOperation || *lastBodyNode.Value.StringVal != "RETURN" {
+		return fmt.Errorf("flow declaration must contain RETURN")
 	}
 
 	return nil
