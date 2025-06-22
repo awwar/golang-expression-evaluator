@@ -10,7 +10,7 @@ IF ($FLIP_COIN_RESULT) (#MORE, #LESS)
 
 PRINT ("Try Next?")
 
-RETURN (0)
+RETURN (void())
 
 #MORE
 PRINT ("you're WIN!")
@@ -20,5 +20,6 @@ VAR (sum("you're lose ", $SOME_VALUE, " points!")) $OUT_RESULT
 
 PRINT ($OUT_RESULT)
 
-#FLIP_COIN(float()) float
-RETURN (rand() > $FLIP_COIN_ARG0)
+#FLIP_COIN(float($FLIP_COIN_ARG0)) bool
+
+RETURN (bool(rand() > $FLIP_COIN_ARG0))

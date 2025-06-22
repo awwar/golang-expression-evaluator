@@ -250,6 +250,7 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 		isFlowDeclaration := false
 
 		nextToken := p.stream.Get(p.currentPosition + 1)
+
 		if nextToken.Type == tokenizer.TypeBrackets {
 			args, err := p.SubparseListInBracers(-1)
 			if err != nil {
@@ -269,11 +270,9 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 		}
 
 		for {
-			p.currentPosition++
-			nextToken := p.stream.Get(p.currentPosition)
+			nextToken = p.stream.Get(p.currentPosition + 1)
 
 			if nextToken == nil || nextToken.StartsWith("#") {
-				p.currentPosition--
 				break
 			}
 
@@ -297,6 +296,7 @@ func (p *Parser) subparseFlowDeclaration() (*Node, error) {
 }
 
 func (p *Parser) subparseNode() (*Node, error) {
+	p.currentPosition++
 	token := p.stream.Get(p.currentPosition)
 
 	if token.Type != tokenizer.TypeWord {
