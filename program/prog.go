@@ -42,13 +42,13 @@ func (o Operation) String() string {
 func NewProgram() *Program {
 	return &Program{
 		operations: []*Operation{},
-		trace:      utility.NewStack[int](),
+		trace:      utility.NewStack[*int](),
 	}
 }
 
 type Program struct {
 	operations []*Operation
-	trace      *utility.Stack[int]
+	trace      *utility.Stack[*int]
 	opIdx      int
 }
 
@@ -173,7 +173,7 @@ func (p *Program) String() string {
 }
 
 func (p *Program) StringStatement() string {
-	return fmt.Sprintf("op: %d trace: %s", p.opIdx, p.trace.ToString(func(n int) string { return strconv.Itoa(n) }))
+	return fmt.Sprintf("op: %d trace: %s", p.opIdx, p.trace.ToString(func(n *int) string { return strconv.Itoa(*n) }))
 }
 
 func (p *Program) IsEnd() bool {

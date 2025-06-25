@@ -9,7 +9,7 @@ func init() {
 	AppendOperation(program.MARK, Mark)
 }
 
-func Mark(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]*program.Value) error {
+func Mark(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]program.Value) error {
 	pr.FinishBlock()
 	pr.Skip(-1)
 

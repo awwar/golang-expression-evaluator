@@ -10,41 +10,41 @@ import (
 
 func init() {
 	operation.AppendExpression("+", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Add(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Add(b) },
 	})
 
 	operation.AppendExpression("-", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Subtract(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Subtract(b) },
 	})
 
 	operation.AppendExpression("/", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Divide(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Divide(b) },
 	})
 
 	operation.AppendExpression("*", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Multiply(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Multiply(b) },
 	})
 
 	operation.AppendExpression("^", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Multiply(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Multiply(b) },
 	})
 
 	operation.AppendExpression("=", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Eq(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Eq(b) },
 	})
 
 	operation.AppendExpression("<", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.Less(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.Less(b) },
 	})
 
 	operation.AppendExpression(">", &BinaryValueOperation{
-		Op: func(a, b *program.Value) (*program.Value, error) { return a.More(b) },
+		Op: func(a, b program.Value) (program.Value, error) { return a.More(b) },
 	})
 }
 
 type BinaryValueOperation struct {
 	operation.CommonExpression
-	Op func(a, b *program.Value) (*program.Value, error)
+	Op func(a, b program.Value) (program.Value, error)
 }
 
 func (s *BinaryValueOperation) Execute(argc int, stack *utility.Stack[program.Value]) error {

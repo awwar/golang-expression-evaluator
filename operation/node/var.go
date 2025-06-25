@@ -35,7 +35,7 @@ func (i *Var) Compile(program *program.Program, node *parser.Node, cmp compiler.
 		return err
 	}
 
-	program.NewVariable(*node.Params[0].Value.StringVal)
+	program.NewVariable(node.Params[0].Value.String())
 
 	return nil
 }

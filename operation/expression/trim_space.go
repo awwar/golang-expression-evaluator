@@ -27,7 +27,7 @@ func (t *TrimSpace) Execute(argc int, stack *utility.Stack[program.Value]) error
 		return err
 	}
 
-	strVal := strings.TrimSpace(*firstOperand.StringVal)
+	strVal := strings.TrimSpace(firstOperand.String())
 
 	stack.Push(program.NewString(strVal))
 

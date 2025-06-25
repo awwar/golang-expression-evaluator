@@ -12,7 +12,7 @@ func init() {
 	AppendOperation(program.CSKIP, CSkip)
 }
 
-func Skip(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
+func Skip(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
 	op := pr.Current()
 
 	n, ok := op.Params[0].(int)
@@ -25,7 +25,7 @@ func Skip(pr *program.Program, stack *utility.Stack[program.Value], memo map[str
 	return nil
 }
 
-func CSkip(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
+func CSkip(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
 	operand, err := stack.Pop()
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func CSkip(pr *program.Program, stack *utility.Stack[program.Value], memo map[st
 		return err
 	}
 
-	if !*condition.BoolVal {
+	if !*condition {
 		return nil
 	}
 

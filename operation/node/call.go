@@ -48,8 +48,8 @@ func (i *Call) Compile(program *program.Program, node *parser.Node, cmp compiler
 		}
 	}
 
-	program.NewJMP(*node.Params[0].Value.StringVal)
-	program.NewVariable(*node.Params[1].Value.StringVal)
+	program.NewJMP(node.Params[0].Value.String())
+	program.NewVariable(node.Params[1].Value.String())
 
 	return nil
 }

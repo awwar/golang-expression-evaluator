@@ -11,25 +11,25 @@ import (
 
 func init() {
 	operation.AppendExpression("bool", &TypeConversion{
-		Op: func(a *program.Value) (*program.Value, error) { return a.ToBoolean() },
+		Op: func(a program.Value) (program.Value, error) { return a.ToBoolean() },
 	})
 
 	operation.AppendExpression("float", &TypeConversion{
-		Op: func(a *program.Value) (*program.Value, error) { return a.ToFloat() },
+		Op: func(a program.Value) (program.Value, error) { return a.ToFloat() },
 	})
 
 	operation.AppendExpression("string", &TypeConversion{
-		Op: func(a *program.Value) (*program.Value, error) { return a.ToString() },
+		Op: func(a program.Value) (program.Value, error) { return a.ToString() },
 	})
 
 	operation.AppendExpression("void", &TypeConversion{
-		Op: func(a *program.Value) (*program.Value, error) { return nil, fmt.Errorf("void is not supported yet") },
+		Op: func(a program.Value) (program.Value, error) { return nil, fmt.Errorf("void is not supported yet") },
 	})
 }
 
 type TypeConversion struct {
 	operation.CommonExpression
-	Op func(a *program.Value) (*program.Value, error)
+	Op func(a program.Value) (program.Value, error)
 }
 
 func (s *TypeConversion) Execute(argc int, stack *utility.Stack[program.Value]) error {

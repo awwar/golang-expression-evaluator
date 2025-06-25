@@ -5,7 +5,7 @@ import (
 	"expression_parser/utility"
 )
 
-type Operation func(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error
+type Operation func(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error
 
 var (
 	Map = map[program.OperationName]Operation{}

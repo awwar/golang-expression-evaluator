@@ -11,7 +11,7 @@ func init() {
 	AppendOperation(program.VAR, Var)
 }
 
-func Var(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
+func Var(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
 	op := pr.Current()
 
 	varName, ok := op.Params[0].(string)

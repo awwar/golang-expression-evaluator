@@ -108,7 +108,17 @@ func FloatValue(list TransformableNodeList) (bool, error) {
 		return false, nil
 	}
 
-	strFloatNumber := fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal)
+	leftNodeValue, err := leftNode.Value.ToInteger()
+	if err != nil {
+		return false, err
+	}
+
+	rightNodeValue, err := rightNode.Value.ToInteger()
+	if err != nil {
+		return false, err
+	}
+
+	strFloatNumber := fmt.Sprintf("%d.%d", *leftNodeValue, *rightNodeValue)
 	newNode := CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
 
 	list.Replace(1, 2, newNode)
@@ -140,7 +150,12 @@ func FunctionCalling(list TransformableNodeList) (bool, error) {
 }
 
 func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
-	operation := *operationNode.Value.StringVal
+	operationNodeValue, err := operationNode.Value.ToString()
+	if err != nil {
+		return nil, err
+	}
+
+	operation := *operationNodeValue
 
 	if operation == "+" {
 		return operandNode, nil
@@ -152,14 +167,9 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 
 	if operandNode.IsNumber() {
 		minusValue := int64(-1)
-		value := program.Value{
-			ValueType: program.Integer,
-			StringVal: nil,
-			FloatVal:  nil,
-			IntVal:    &minusValue,
-		}
+		value := program.NewInteger(minusValue)
 
-		multipliedValue, err := operandNode.Value.Multiply(&value)
+		multipliedValue, err := operandNode.Value.Multiply(value)
 
 		if err != nil {
 			return nil, fmt.Errorf("negation value error: %s", err)
@@ -171,7 +181,7 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 			return nil, fmt.Errorf("negation value error: %s", err)
 		}
 
-		numberNode := CreateAsNumber(*stringVal.StringVal, operandNode.TokenPosition)
+		numberNode := CreateAsNumber(string(*stringVal), operandNode.TokenPosition)
 
 		return numberNode, nil
 	}

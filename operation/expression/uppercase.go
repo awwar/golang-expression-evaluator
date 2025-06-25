@@ -27,7 +27,7 @@ func (u *Uppercase) Execute(argc int, stack *utility.Stack[program.Value]) error
 		return err
 	}
 
-	strVal := strings.ToUpper(*firstOperand.StringVal)
+	strVal := strings.ToUpper(firstOperand.String())
 
 	stack.Push(program.NewString(strVal))
 

@@ -21,7 +21,7 @@ func init() {
 	AppendOperation(program.CALL, Call)
 }
 
-func Call(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
+func Call(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
 	op := pr.Current()
 
 	procedureName, ok := op.Params[0].(string)

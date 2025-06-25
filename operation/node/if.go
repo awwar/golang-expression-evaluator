@@ -43,9 +43,9 @@ func (i *If) Compile(program *program.Program, node *parser.Node, cmp compiler.S
 	}
 
 	program.NewCSKP(2)
-	program.NewJMP(*node.Params[2].Value.StringVal)
+	program.NewJMP(node.Params[2].Value.String())
 	program.NewSKP(1)
-	program.NewJMP(*node.Params[1].Value.StringVal)
+	program.NewJMP(node.Params[1].Value.String())
 
 	return nil
 }

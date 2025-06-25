@@ -11,7 +11,7 @@ func init() {
 	AppendOperation(program.PUSH, Push)
 }
 
-func Push(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]*program.Value) error {
+func Push(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
 	op := pr.Current()
 
 	v, ok := op.Params[0].(program.Value)
@@ -19,10 +19,10 @@ func Push(pr *program.Program, stack *utility.Stack[program.Value], memo map[str
 		return fmt.Errorf("PUSH param is not a *value")
 	}
 
-	if v.IsVariable() {
-		stack.Push(memo[*v.StringVal])
+	if program.IsVariable(v) {
+		stack.Push(memo[v.String()])
 	} else {
-		stack.Push(&v)
+		stack.Push(v)
 	}
 
 	return nil

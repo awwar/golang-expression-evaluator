@@ -42,7 +42,7 @@ func (p *Print) Execute(argc int, stack *utility.Stack[program.Value]) error {
 		return err
 	}
 
-	fmt.Println(*operandAsString.StringVal)
+	fmt.Println(operandAsString.String())
 
 	return nil
 }

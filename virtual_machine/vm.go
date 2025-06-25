@@ -10,7 +10,7 @@ import (
 
 func Execute(pr *program.Program) error {
 	stack := utility.NewStack[program.Value]()
-	memo := map[string]*program.Value{}
+	memo := map[string]program.Value{}
 
 	if err := pr.ToProgramBegin(); err != nil {
 		return err

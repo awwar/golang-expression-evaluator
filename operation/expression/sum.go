@@ -15,7 +15,7 @@ type Sum struct {
 }
 
 func (s *Sum) Execute(argc int, stack *utility.Stack[program.Value]) error {
-	var result *program.Value
+	var result program.Value
 
 	for i := 0; i < argc; i++ {
 		operand, err := stack.Pop()

@@ -11,7 +11,7 @@ func init() {
 	AppendOperation(program.JMP, Jmp)
 }
 
-func Jmp(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]*program.Value) error {
+func Jmp(pr *program.Program, _ *utility.Stack[program.Value], _ map[string]program.Value) error {
 	op := pr.Current()
 
 	pr.TraceBack()

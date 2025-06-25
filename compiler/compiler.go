@@ -49,7 +49,7 @@ func (c *Compiler) doCompile(node *parser.Node) error {
 	}
 
 	if node.Type == parser.TypeOperation {
-		if proc, ok := OperationSubCompilerMap[*node.Value.StringVal]; ok {
+		if proc, ok := OperationSubCompilerMap[node.Value.String()]; ok {
 			return proc.Compile(c.program, node, c)
 		}
 	}
@@ -62,20 +62,20 @@ func (c *Compiler) SubCompile(node *parser.Node) error {
 		returnType := ""
 		bodyIndex := 0
 
-		c.program.NewMark(*node.Value.StringVal)
+		c.program.NewMark(node.Value.String())
 
 		for i, n := range node.Params {
 			bodyIndex = i
 
 			if n.Type == parser.TypeConstant {
-				returnType = *n.Value.StringVal
+				returnType = n.Value.String()
 
 				break
 			}
 
-			c.program.NewCall(*n.Value.StringVal, len(n.Params))
+			c.program.NewCall(n.Value.String(), len(n.Params))
 			if len(n.Params) == 1 {
-				c.program.NewVariable(*n.Params[0].Value.StringVal)
+				c.program.NewVariable(n.Params[0].Value.String())
 			}
 		}
 
@@ -91,7 +91,7 @@ func (c *Compiler) SubCompile(node *parser.Node) error {
 	}
 
 	if node.Type == parser.TypeFlowBranchesDeclaration {
-		c.program.NewMark(*node.Value.StringVal)
+		c.program.NewMark(node.Value.String())
 	}
 
 	for _, child := range node.Params {
@@ -101,15 +101,15 @@ func (c *Compiler) SubCompile(node *parser.Node) error {
 	}
 
 	if node.Type == parser.TypeVariable {
-		c.program.NewPush(*node.Value)
+		c.program.NewPush(node.Value)
 	}
 
 	if node.Type == parser.TypeOperation {
-		c.program.NewCall(*node.Value.StringVal, len(node.Params))
+		c.program.NewCall(node.Value.String(), len(node.Params))
 	}
 
 	if node.Type == parser.TypeConstant {
-		c.program.NewPush(*node.Value)
+		c.program.NewPush(node.Value)
 	}
 
 	return nil
@@ -122,7 +122,7 @@ func checkLastOperationForReturn(node *parser.Node) error {
 
 	lastBodyNode := node.Params[len(node.Params)-1]
 
-	if lastBodyNode.Type != parser.TypeOperation || *lastBodyNode.Value.StringVal != "RETURN" {
+	if lastBodyNode.Type != parser.TypeOperation || lastBodyNode.Value.String() != "RETURN" {
 		return fmt.Errorf("flow declaration must contain RETURN")
 	}
 

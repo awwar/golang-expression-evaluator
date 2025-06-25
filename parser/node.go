@@ -23,7 +23,7 @@ var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "
 
 type Node struct {
 	Type          int
-	Value         *program.Value
+	Value         program.Value
 	Params        []*Node
 	Priority      int
 	TokenPosition int
@@ -31,11 +31,8 @@ type Node struct {
 
 func CreateAsProgram(params []*Node) *Node {
 	return &Node{
-		Type: TypeProgram,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: utility.AsPtr("root"),
-		},
+		Type:          TypeProgram,
+		Value:         program.NewString("root"),
 		Params:        params,
 		Priority:      4,
 		TokenPosition: 0,
@@ -44,11 +41,8 @@ func CreateAsProgram(params []*Node) *Node {
 
 func CreateAsConstant(value string, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeConstant,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &value,
-		},
+		Type:          TypeConstant,
+		Value:         program.NewString(value),
 		Params:        make([]*Node, 0),
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -57,11 +51,8 @@ func CreateAsConstant(value string, tokenPosition int) *Node {
 
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
 	node := &Node{
-		Type: TypeOperation,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &operation,
-		},
+		Type:          TypeOperation,
+		Value:         program.NewString(operation),
 		Params:        params,
 		Priority:      OperationPriority[operation],
 		TokenPosition: tokenPosition,
@@ -75,23 +66,21 @@ func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Nod
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
-	valueObject := program.Value{}
+	var valueObject program.Value
 
 	if strings.Contains(value, ".") {
 		val := utility.Must(strconv.ParseFloat(value, 64))
 
-		valueObject.ValueType = program.Float
-		valueObject.FloatVal = &val
+		valueObject = program.NewFloat(val)
 	} else {
 		val := utility.Must(strconv.ParseInt(value, 0, 64))
 
-		valueObject.ValueType = program.Integer
-		valueObject.IntVal = &val
+		valueObject = program.NewInteger(val)
 	}
 
 	return &Node{
 		Type:          TypeConstant,
-		Value:         &valueObject,
+		Value:         valueObject,
 		Params:        make([]*Node, 0),
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -100,11 +89,8 @@ func CreateAsNumber(value string, tokenPosition int) *Node {
 
 func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeConstant,
-		Value: &program.Value{
-			ValueType: program.String,
-			StringVal: &value,
-		},
+		Type:          TypeConstant,
+		Value:         program.NewString(value),
 		Params:        make([]*Node, 0),
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -113,11 +99,8 @@ func CreateAsString(value string, tokenPosition int) *Node {
 
 func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeFlowDeclaration,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &value,
-		},
+		Type:          TypeFlowDeclaration,
+		Value:         program.NewString(value),
 		Params:        params,
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -126,11 +109,8 @@ func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *N
 
 func CreateAsFlowBranchesDeclaration(value string, params []*Node, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeFlowBranchesDeclaration,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &value,
-		},
+		Type:          TypeFlowBranchesDeclaration,
+		Value:         program.NewString(value),
 		Params:        params,
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -139,11 +119,8 @@ func CreateAsFlowBranchesDeclaration(value string, params []*Node, tokenPosition
 
 func CreateAsFlowLink(value string, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeFlowLink,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &value,
-		},
+		Type:          TypeFlowLink,
+		Value:         program.NewString(value),
 		Params:        make([]*Node, 0),
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -152,11 +129,8 @@ func CreateAsFlowLink(value string, tokenPosition int) *Node {
 
 func CreateAsVariable(value string, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeVariable,
-		Value: &program.Value{
-			ValueType: program.Atom,
-			StringVal: &value,
-		},
+		Type:          TypeVariable,
+		Value:         program.NewString(value),
 		Params:        make([]*Node, 0),
 		Priority:      4,
 		TokenPosition: tokenPosition,
@@ -204,9 +178,14 @@ func (f *Node) IsMathematicalOperation() bool {
 		return false
 	}
 
-	_, ok := OperationPriority[*f.Value.StringVal]
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
 
-	return ok && *f.Value.StringVal != "."
+	_, ok := OperationPriority[string(*v)]
+
+	return ok && string(*v) != "."
 }
 
 func (f *Node) IsNotCallOperation() bool {
@@ -214,7 +193,12 @@ func (f *Node) IsNotCallOperation() bool {
 		return false
 	}
 
-	return *f.Value.StringVal != "."
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
+
+	return string(*v) != "."
 }
 
 func (f *Node) IsCallOperation() bool {
@@ -222,7 +206,12 @@ func (f *Node) IsCallOperation() bool {
 		return false
 	}
 
-	return *f.Value.StringVal == "."
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
+
+	return string(*v) == "."
 }
 
 func (f *Node) IsNegatable() bool {
@@ -234,11 +223,11 @@ func (f *Node) IsFunction() bool {
 }
 
 func (f *Node) IsNumber() bool {
-	return f.Value.IsNumber()
+	return program.IsNumber(f.Value)
 }
 
 func (f *Node) IsMinusOrPlus() bool {
-	return f.Value.IsMinusOrPlus()
+	return program.IsMinusOrPlus(f.Value)
 }
 
 func (f *Node) IsFlowLink() bool {
