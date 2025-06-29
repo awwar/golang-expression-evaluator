@@ -2,6 +2,7 @@ package operation
 
 import (
 	"fmt"
+	"strings"
 
 	"expression_parser/compiler"
 	"expression_parser/parser"
@@ -12,13 +13,17 @@ import (
 )
 
 func AppendProcedure(name string, op Procedure) {
-	parser.AddProcedureParser(name, op)
-	operation.AddExternalMethod(name, op)
-	compiler.AddOperationSubCompiler(name, op)
+	n := strings.ToLower(name)
+
+	parser.AddProcedureParser(n, op)
+	operation.AddExternalMethod(n, op)
+	compiler.AddOperationSubCompiler(n, op)
 }
 
 func AppendExpression(name string, op Expression) {
-	operation.AddExternalMethod(name, op)
+	n := strings.ToLower(name)
+
+	operation.AddExternalMethod(n, op)
 }
 
 type Procedure interface {

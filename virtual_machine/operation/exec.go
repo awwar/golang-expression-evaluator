@@ -18,25 +18,25 @@ func AddExternalMethod(name string, method ExternalMethod) {
 }
 
 func init() {
-	AppendOperation(program.CALL, Call)
+	AppendOperation(program.EXEC, Exec)
 }
 
-func Call(pr *program.Program, stack *utility.Stack[program.Value], memo map[string]program.Value) error {
+func Exec(pr *program.Program, stack *utility.Stack[program.Value], _ map[string]program.Value) error {
 	op := pr.Current()
 
 	procedureName, ok := op.Params[0].(string)
 	if !ok {
-		return fmt.Errorf("CALL 1 param is not a string")
+		return fmt.Errorf("EXEC 1 param is not a string")
 	}
 
 	argc, ok := op.Params[1].(int)
 	if !ok {
-		return fmt.Errorf("CALL 2 param is not a int")
+		return fmt.Errorf("EXEC 2 param is not a int")
 	}
 
 	proc, ok := ExternalMethodMap[procedureName]
 	if !ok {
-		return fmt.Errorf("CALL procedure `%s` is not found", procedureName)
+		return fmt.Errorf("EXEC procedure `%s` is not found", procedureName)
 	}
 
 	if err := proc.Execute(argc, stack); err != nil {

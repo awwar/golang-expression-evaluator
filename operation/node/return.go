@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	operation.AppendProcedure("RETURN", &Return{})
+	operation.AppendProcedure("return", &Return{})
 }
 
 type Return struct {
@@ -17,7 +17,7 @@ type Return struct {
 }
 
 func (i *Return) Parse(token *tokenizer.Token, pr *parser.Parser) (*parser.Node, error) {
-	// RETURN (expr)
+	// return (expr)
 	expr, err := pr.SubparseOneInBracers()
 	if err != nil {
 		return nil, err

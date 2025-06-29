@@ -1,25 +1,25 @@
 #MAIN
-CALL #LOTTERY () $LOTTERY_RESULT
+call #LOTTERY () $LOTTERY_RESULT
 
 #LOTTERY() void
-VAR (32) $SOME_VALUE
+var (32) $SOME_VALUE
 
-CALL #FLIP_COIN (0.5) $FLIP_COIN_RESULT
+call #FLIP_COIN (0.5) $FLIP_COIN_RESULT
 
-IF ($FLIP_COIN_RESULT) (#MORE, #LESS)
+if ($FLIP_COIN_RESULT) (#MORE, #LESS)
 
-PRINT ("Try Next?")
+print ("Try Next?")
 
-RETURN (void(0))
+return (void(0))
 
 #MORE
-PRINT ("you're WIN!")
+print ("you're WIN!")
 
 #LESS
-VAR (sum("you're lose ", $SOME_VALUE, " points!")) $OUT_RESULT
+var (sum("you're lose ", $SOME_VALUE, " points!")) $OUT_RESULT
 
-PRINT ($OUT_RESULT)
+print ($OUT_RESULT)
 
 #FLIP_COIN(float($FLIP_COIN_ARG0)) bool
 
-RETURN (bool(rand() > $FLIP_COIN_ARG0))
+return (bool(rand() > $FLIP_COIN_ARG0))

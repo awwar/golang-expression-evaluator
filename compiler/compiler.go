@@ -73,7 +73,7 @@ func (c *Compiler) SubCompile(node *parser.Node) error {
 				break
 			}
 
-			c.program.NewCall(n.Value.String(), len(n.Params))
+			c.program.NewExec(n.Value.String(), len(n.Params))
 			if len(n.Params) == 1 {
 				c.program.NewVariable(n.Params[0].Value.String())
 			}
@@ -105,7 +105,7 @@ func (c *Compiler) SubCompile(node *parser.Node) error {
 	}
 
 	if node.Type == parser.TypeOperation {
-		c.program.NewCall(node.Value.String(), len(node.Params))
+		c.program.NewExec(node.Value.String(), len(node.Params))
 	}
 
 	if node.Type == parser.TypeConstant {
@@ -122,8 +122,8 @@ func checkLastOperationForReturn(node *parser.Node) error {
 
 	lastBodyNode := node.Params[len(node.Params)-1]
 
-	if lastBodyNode.Type != parser.TypeOperation || lastBodyNode.Value.String() != "RETURN" {
-		return fmt.Errorf("flow declaration must contain RETURN")
+	if lastBodyNode.Type != parser.TypeOperation || lastBodyNode.Value.String() != "return" {
+		return fmt.Errorf("flow declaration must contain return")
 	}
 
 	return nil

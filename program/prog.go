@@ -12,7 +12,7 @@ type OperationName string
 
 const (
 	PUSH  OperationName = "PUSH"
-	CALL  OperationName = "CALL"
+	EXEC  OperationName = "EXEC"
 	MARK  OperationName = "MARK"
 	JMP   OperationName = "JMP"
 	VAR   OperationName = "VAR"
@@ -94,9 +94,9 @@ func (p *Program) NewSKP(num int) {
 	})
 }
 
-func (p *Program) NewCall(name string, argsC int) {
+func (p *Program) NewExec(name string, argsC int) {
 	p.operations = append(p.operations, &Operation{
-		Name:   CALL,
+		Name:   EXEC,
 		Params: []any{name, argsC},
 	})
 }

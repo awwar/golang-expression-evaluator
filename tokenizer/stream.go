@@ -29,8 +29,8 @@ func (t *TokenStream) Get(index int) *Token {
 }
 
 func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
-	var bracketsCount int = 0
-	var currenPosition int = startBracer
+	bracketsCount := 0
+	currenPosition := startBracer
 
 	for {
 		value := t.Get(currenPosition)
@@ -68,12 +68,10 @@ func (t *TokenStream) NextTokenIsBracer(position int) bool {
 }
 
 func (t *TokenStream) String() string {
-	var output string = ""
+	output := ""
 
-	for i := range t.Tokens {
-		var value Token = *t.Tokens[i]
-
-		output = fmt.Sprintf("%s\n	%s", output, value.String())
+	for _, token := range t.Tokens {
+		output = fmt.Sprintf("%s\n	%s", output, token.String())
 	}
 
 	output = strings.TrimLeft(output, ",  \n")
