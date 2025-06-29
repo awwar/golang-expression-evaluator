@@ -74,7 +74,6 @@ func (p *Parser) subparseExpressions() ([]*Node, error) {
 
 	for {
 		token := p.stream.Get(p.currentPosition)
-
 		if token == nil {
 			lastToken := p.stream.Get(p.currentPosition - 1)
 
@@ -92,30 +91,18 @@ func (p *Parser) subparseExpressions() ([]*Node, error) {
 			list.Push(subNodes...)
 
 			break
-		}
-
-		if token.Type == tokenizer.TypeWord {
-			if token.StartsWith("#") {
-				node := CreateAsFlowLink(token.Value, token.Position)
-
-				list.Push(node)
-			} else if token.StartsWith("$") {
-				node := CreateAsVariable(token.Value, token.Position)
-
-				list.Push(node)
-			} else {
-				subNodes, err := p.SubparseListInBracers(-1)
-				if err != nil {
-					return nil, err
-				}
-
-				node := CreateAsOperation(token.Value, subNodes, token.Position)
-
-				list.Push(node)
+		} else if token.Type == tokenizer.TypeWord && token.StartsWith("#") {
+			list.Push(CreateAsFlowLink(token.Value, token.Position))
+		} else if token.Type == tokenizer.TypeWord && token.StartsWith("$") {
+			list.Push(CreateAsVariable(token.Value, token.Position))
+		} else if token.Type == tokenizer.TypeWord {
+			subNodes, err := p.SubparseListInBracers(-1)
+			if err != nil {
+				return nil, err
 			}
-		}
 
-		if token.Type == tokenizer.TypeBrackets {
+			list.Push(CreateAsOperation(token.Value, subNodes, token.Position))
+		} else if token.Type == tokenizer.TypeBrackets {
 			p.currentPosition--
 			subNode, err := p.SubparseOneInBracers()
 			if err != nil {
@@ -125,24 +112,14 @@ func (p *Parser) subparseExpressions() ([]*Node, error) {
 			subNode.SetPriority(0)
 
 			list.Push(subNode)
-		}
-
-		if token.Type == tokenizer.TypeOperation {
-			node := CreateAsOperation(token.Value, make([]*Node, 2), token.Position)
-
-			list.Push(node)
-		}
-
-		if token.Type == tokenizer.TypeNumber {
-			node := CreateAsNumber(token.Value, token.Position)
-
-			list.Push(node)
-		}
-
-		if token.Type == tokenizer.TypeString {
-			node := CreateAsString(token.Value, token.Position)
-
-			list.Push(node)
+		} else if token.Type == tokenizer.TypeOperation {
+			list.Push(CreateAsOperation(token.Value, make([]*Node, 2), token.Position))
+		} else if token.Type == tokenizer.TypeNumber {
+			list.Push(CreateAsNumber(token.Value, token.Position))
+		} else if token.Type == tokenizer.TypeString {
+			list.Push(CreateAsString(token.Value, token.Position))
+		} else {
+			return nil, p.error(token.Position, "unknown token")
 		}
 
 		if p.currentPosition == p.lastPosition {

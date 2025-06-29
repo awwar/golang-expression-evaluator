@@ -10,19 +10,12 @@ import (
 
 func init() {
 	operation.AppendExpression("+", &BinaryValueOperation{Op: program.Add})
-
 	operation.AppendExpression("-", &BinaryValueOperation{Op: program.Subtract})
-
 	operation.AppendExpression("/", &BinaryValueOperation{Op: program.Divide})
-
 	operation.AppendExpression("*", &BinaryValueOperation{Op: program.Multiply})
-
 	operation.AppendExpression("^", &BinaryValueOperation{Op: program.Power})
-
 	operation.AppendExpression("=", &BinaryValueOperation{Op: program.Eq})
-
 	operation.AppendExpression("<", &BinaryValueOperation{Op: program.Less})
-
 	operation.AppendExpression(">", &BinaryValueOperation{Op: program.More})
 }
 
