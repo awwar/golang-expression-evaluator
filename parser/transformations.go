@@ -1,24 +1,24 @@
-package expression
+package parser
 
 import (
 	"fmt"
 
-	"expression_parser/parser"
+	"expression_parser/program"
 )
 
-type Transformer func(list TransformableNodeList) (bool, *parser.Error)
+type Transformer func(list TransformableNodeList) (bool, error)
 
 type TransformableNodeList interface {
-	Current() *parser.Node
-	Left() *parser.Node
-	Right() *parser.Node
-	RightRight() *parser.Node
-	LeftLeft() *parser.Node
-	Replace(toLeft, toRight int, node *parser.Node)
+	Current() *Node
+	Left() *Node
+	Right() *Node
+	RightRight() *Node
+	LeftLeft() *Node
+	Replace(toLeft, toRight int, node *Node)
 }
 
 // UnsignedMultiplication 2 sin(20) -> (2 * sin(20))
-func UnsignedMultiplication(list TransformableNodeList) (bool, *parser.Error) {
+func UnsignedMultiplication(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 
@@ -30,7 +30,7 @@ func UnsignedMultiplication(list TransformableNodeList) (bool, *parser.Error) {
 		return false, nil
 	}
 
-	newNode := parser.CreateAsOperation("*", make([]*parser.Node, 2), currentNode.TokenPosition)
+	newNode := CreateAsOperation("*", make([]*Node, 2), currentNode.TokenPosition)
 	newNode.SetSubNode(0, currentNode)
 	newNode.SetSubNode(1, leftNode)
 
@@ -42,7 +42,7 @@ func UnsignedMultiplication(list TransformableNodeList) (bool, *parser.Error) {
 }
 
 // ValueNegation 1 + - 1 -> 1 + -1
-func ValueNegation(list TransformableNodeList) (bool, *parser.Error) {
+func ValueNegation(list TransformableNodeList) (bool, error) {
 	leftLeftNode := list.LeftLeft()
 	leftNode := list.Left()
 	currentNode := list.Current()
@@ -51,9 +51,9 @@ func ValueNegation(list TransformableNodeList) (bool, *parser.Error) {
 		return false, nil
 	}
 
-	var isAllowedLeftBound = leftLeftNode == nil || leftLeftNode.IsMathematicalOperation()
+	isAllowedLeftBound := leftLeftNode == nil || leftLeftNode.IsMathematicalOperation()
 
-	if !(currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && isAllowedLeftBound) {
+	if !currentNode.IsNegatable() || !leftNode.IsMinusOrPlus() || !isAllowedLeftBound {
 		return false, nil
 	}
 
@@ -70,7 +70,7 @@ func ValueNegation(list TransformableNodeList) (bool, *parser.Error) {
 	return true, nil
 }
 
-func SimpleMath(list TransformableNodeList) (bool, *parser.Error) {
+func SimpleMath(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -91,7 +91,7 @@ func SimpleMath(list TransformableNodeList) (bool, *parser.Error) {
 	return true, nil
 }
 
-func FloatValue(list TransformableNodeList) (bool, *parser.Error) {
+func FloatValue(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -108,8 +108,18 @@ func FloatValue(list TransformableNodeList) (bool, *parser.Error) {
 		return false, nil
 	}
 
-	strFloatNumber := fmt.Sprintf("%d.%d", *leftNode.Value.IntVal, *rightNode.Value.IntVal)
-	newNode := parser.CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
+	leftNodeValue, err := leftNode.Value.ToInteger()
+	if err != nil {
+		return false, err
+	}
+
+	rightNodeValue, err := rightNode.Value.ToInteger()
+	if err != nil {
+		return false, err
+	}
+
+	strFloatNumber := fmt.Sprintf("%d.%d", *leftNodeValue, *rightNodeValue)
+	newNode := CreateAsNumber(strFloatNumber, rightNode.TokenPosition)
 
 	list.Replace(1, 2, newNode)
 
@@ -118,7 +128,7 @@ func FloatValue(list TransformableNodeList) (bool, *parser.Error) {
 	return true, nil
 }
 
-func FunctionCalling(list TransformableNodeList) (bool, *parser.Error) {
+func FunctionCalling(list TransformableNodeList) (bool, error) {
 	leftNode := list.Left()
 	currentNode := list.Current()
 	rightNode := list.Right()
@@ -139,46 +149,46 @@ func FunctionCalling(list TransformableNodeList) (bool, *parser.Error) {
 	return true, nil
 }
 
-func createNegativeNode(operationNode *parser.Node, operandNode *parser.Node) (*parser.Node, *parser.Error) {
-	operation := *operationNode.Value.StringVal
+func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
+	operationNodeValue, err := operationNode.Value.ToString()
+	if err != nil {
+		return nil, err
+	}
+
+	operation := *operationNodeValue
 
 	if operation == "+" {
 		return operandNode, nil
 	}
 
 	if operation != "-" {
-		return nil, parser.NewError(operationNode.TokenPosition, "unable to negate node with operation %s", operation)
+		return nil, fmt.Errorf("unable to negate node with operation %s", operation)
 	}
 
 	if operandNode.IsNumber() {
-		var minusValue int64 = -1
-		value := Value{
-			Type:      Integer,
-			StringVal: nil,
-			FloatVal:  nil,
-			IntVal:    &minusValue,
-		}
+		minusValue := int64(-1)
+		value := program.NewInteger(minusValue)
 
-		multipliedValue, err := operandNode.Value.Multiply(&value)
+		multipliedValue, err := program.Multiply(operandNode.Value, value)
 
 		if err != nil {
-			return nil, parser.NewError(operationNode.TokenPosition, "negation value error: %s", err)
+			return nil, fmt.Errorf("negation value error: %s", err)
 		}
 
 		stringVal, err := multipliedValue.ToString()
 
 		if err != nil {
-			return nil, parser.NewError(operationNode.TokenPosition, "negation value error: %s", err)
+			return nil, fmt.Errorf("negation value error: %s", err)
 		}
 
-		numberNode := parser.CreateAsNumber(*stringVal.StringVal, operandNode.TokenPosition)
+		numberNode := CreateAsNumber(string(*stringVal), operandNode.TokenPosition)
 
 		return numberNode, nil
 	}
 
-	numberNode := parser.CreateAsNumber("-1", operandNode.TokenPosition)
+	numberNode := CreateAsNumber("-1", operandNode.TokenPosition)
 
-	newOperationNode := parser.CreateAsOperation("*", make([]*parser.Node, 2), operandNode.TokenPosition)
+	newOperationNode := CreateAsOperation("*", make([]*Node, 2), operandNode.TokenPosition)
 	newOperationNode.SetSubNode(0, numberNode)
 	newOperationNode.SetSubNode(1, operandNode)
 

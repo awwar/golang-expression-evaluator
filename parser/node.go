@@ -5,92 +5,148 @@ import (
 	"strconv"
 	"strings"
 
-	"expression_parser/parser/expression"
+	"expression_parser/program"
+	"expression_parser/utility"
 )
 
 const (
-	TypeOperation = iota
-	TypeConstant  = iota
+	TypeOperation               int = iota
+	TypeConstant                int = iota
+	TypeVariable                int = iota
+	TypeFlowLink                int = iota
+	TypeFlowDeclaration         int = iota
+	TypeFlowBranchesDeclaration int = iota
+	TypeProgram                 int = iota
 )
 
-var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, "^": 3, ".": 4}
-var StringPriority = 4
-var NumberPriority = 4
-var FunctionPriority = 4
+var OperationPriority = map[string]int{"+": 1, "-": 2, "*": 2, "/": 2, ">": 2, "<": 2, "=": 2, "^": 3, ".": 4}
 
 type Node struct {
 	Type          int
-	Value         *expression.Value
+	Value         program.Value
 	Params        []*Node
 	Priority      int
 	TokenPosition int
 }
 
+func CreateAsProgram(params []*Node) *Node {
+	return &Node{
+		Type:          TypeProgram,
+		Value:         program.NewString("root"),
+		Params:        params,
+		Priority:      4,
+		TokenPosition: 0,
+	}
+}
+
+func CreateAsConstant(value string, tokenPosition int) *Node {
+	return &Node{
+		Type:          TypeConstant,
+		Value:         program.NewString(value),
+		Params:        make([]*Node, 0),
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
 func CreateAsOperation(operation string, params []*Node, tokenPosition int) *Node {
 	node := &Node{
-		Type: TypeOperation,
-		Value: &expression.Value{
-			Type:      expression.Atom,
-			StringVal: &operation,
-		},
+		Type:          TypeOperation,
+		Value:         program.NewString(operation),
 		Params:        params,
 		Priority:      OperationPriority[operation],
 		TokenPosition: tokenPosition,
 	}
 
 	if !node.IsMathematicalOperation() {
-		node.Priority = FunctionPriority
+		node.Priority = 4
 	}
 
 	return node
 }
 
 func CreateAsNumber(value string, tokenPosition int) *Node {
-	valueObject := expression.Value{}
+	var valueObject program.Value
 
 	if strings.Contains(value, ".") {
-		val, _ := strconv.ParseFloat(value, 64)
+		val := utility.Must(strconv.ParseFloat(value, 64))
 
-		valueObject.Type = expression.Float
-		valueObject.FloatVal = &val
+		valueObject = program.NewFloat(val)
 	} else {
-		val, _ := strconv.ParseInt(value, 0, 64)
+		val := utility.Must(strconv.ParseInt(value, 0, 64))
 
-		valueObject.Type = expression.Integer
-		valueObject.IntVal = &val
+		valueObject = program.NewInteger(val)
 	}
 
 	return &Node{
 		Type:          TypeConstant,
-		Value:         &valueObject,
+		Value:         valueObject,
 		Params:        make([]*Node, 0),
-		Priority:      NumberPriority,
+		Priority:      4,
 		TokenPosition: tokenPosition,
 	}
 }
 
 func CreateAsString(value string, tokenPosition int) *Node {
 	return &Node{
-		Type: TypeConstant,
-		Value: &expression.Value{
-			Type:      expression.String,
-			StringVal: &value,
-		},
+		Type:          TypeConstant,
+		Value:         program.NewString(value),
 		Params:        make([]*Node, 0),
-		Priority:      StringPriority,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowDeclaration(value string, params []*Node, tokenPosition int) *Node {
+	return &Node{
+		Type:          TypeFlowDeclaration,
+		Value:         program.NewString(value),
+		Params:        params,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowBranchesDeclaration(value string, params []*Node, tokenPosition int) *Node {
+	return &Node{
+		Type:          TypeFlowBranchesDeclaration,
+		Value:         program.NewString(value),
+		Params:        params,
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsFlowLink(value string, tokenPosition int) *Node {
+	return &Node{
+		Type:          TypeFlowLink,
+		Value:         program.NewString(value),
+		Params:        make([]*Node, 0),
+		Priority:      4,
+		TokenPosition: tokenPosition,
+	}
+}
+
+func CreateAsVariable(value string, tokenPosition int) *Node {
+	return &Node{
+		Type:          TypeVariable,
+		Value:         program.NewString(value),
+		Params:        make([]*Node, 0),
+		Priority:      4,
 		TokenPosition: tokenPosition,
 	}
 }
 
 func (f *Node) String(indent int) string {
+	if f == nil {
+		return "nil"
+	}
+
 	stringIndent := strings.Repeat("    ", indent)
 
 	branches := ""
 
 	for _, n := range f.Params {
-		if n == nil {
-			continue
-		}
 		branches = branches + fmt.Sprintf("%s└── %s", stringIndent, n.String(indent+1))
 	}
 
@@ -122,9 +178,14 @@ func (f *Node) IsMathematicalOperation() bool {
 		return false
 	}
 
-	_, ok := OperationPriority[*f.Value.StringVal]
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
 
-	return ok && *f.Value.StringVal != "."
+	_, ok := OperationPriority[string(*v)]
+
+	return ok && string(*v) != "."
 }
 
 func (f *Node) IsNotCallOperation() bool {
@@ -132,7 +193,12 @@ func (f *Node) IsNotCallOperation() bool {
 		return false
 	}
 
-	return *f.Value.StringVal != "."
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
+
+	return string(*v) != "."
 }
 
 func (f *Node) IsCallOperation() bool {
@@ -140,7 +206,12 @@ func (f *Node) IsCallOperation() bool {
 		return false
 	}
 
-	return *f.Value.StringVal == "."
+	v, err := f.Value.ToString()
+	if err != nil {
+		return false
+	}
+
+	return string(*v) == "."
 }
 
 func (f *Node) IsNegatable() bool {
@@ -152,9 +223,13 @@ func (f *Node) IsFunction() bool {
 }
 
 func (f *Node) IsNumber() bool {
-	return f.Value.IsNumber()
+	return program.IsNumber(f.Value)
 }
 
 func (f *Node) IsMinusOrPlus() bool {
-	return f.Value.IsMinusOrPlus()
+	return program.IsMinusOrPlus(f.Value)
+}
+
+func (f *Node) IsFlowLink() bool {
+	return f.Type == TypeFlowLink
 }

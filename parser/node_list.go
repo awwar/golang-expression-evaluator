@@ -1,6 +1,8 @@
 package parser
 
-import "slices"
+import (
+	"slices"
+)
 
 type NodeList struct {
 	list []*Node

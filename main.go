@@ -4,61 +4,35 @@ import (
 	"fmt"
 	"os"
 
+	"expression_parser/compiler"
+	"expression_parser/parser"
+	// ToDo: find another way to deal with autowiring
+	_ "expression_parser/operation"
+	_ "expression_parser/operation/expression"
+	_ "expression_parser/operation/node"
 	"expression_parser/tokenizer"
 	"expression_parser/utility"
+	"expression_parser/virtual_machine"
 )
 
 func main() {
+	virtual_machine.Debug = false
+
 	input := string(utility.Must(os.ReadFile(".example/index.mp")))
 
 	//fmt.Println(input)
 
-	tokenizerMachine := tokenizer.New()
+	tokenStream := utility.Must(tokenizer.New().ExpressionToStream(&input))
 
-	tokenStream := utility.Must(tokenizerMachine.ExpressionToStream(&input))
+	//fmt.Println(tokenStream)
 
-	fmt.Println(tokenStream)
+	tree := utility.Must(parser.NewFromStream(tokenStream).ParseProgram())
 
-	//parseMachine := expression.NewFromStream(tokenStream)
-	//
-	//tree, parseError := parseMachine.Parse()
-	//if parseError != nil {
-	//	parseError.EnrichWithExpression(&input)
-	//
-	//	fmt.Println(parseError)
-	//
-	//	return
-	//}
-	//
-	//if len(tree) != 1 {
-	//	fmt.Println("All nodes must collapse in one node, got: ", len(tree))
-	//
-	//	for _, rt := range tree {
-	//		fmt.Println(rt.String(0))
-	//	}
-	//
-	//	return
-	//}
-	//
-	//root := tree[0]
-	//
-	//fmt.Println(root.String(0))
-	//
-	//compile := compiler.NewCompiler()
-	//
-	//program, err := compile.Compile(root)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//
-	//fmt.Println(program.String())
-	//
-	//result, err := virtual_machine.Execute(*program)
-	//if err != nil {
-	//	fmt.Println(err)
-	//
-	//	return
-	//}
-	//
-	//fmt.Printf("%s", result)
+	fmt.Println(tree.String(0))
+
+	program := utility.Must(compiler.NewCompiler().Compile(tree))
+
+	fmt.Println(program.String())
+
+	utility.MustVoid(virtual_machine.Execute(program))
 }

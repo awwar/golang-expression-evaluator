@@ -6,7 +6,8 @@ import (
 )
 
 type TokenStream struct {
-	Tokens []*Token
+	Tokens     []*Token
+	Expression string
 }
 
 func (t *TokenStream) Length() int {
@@ -28,8 +29,8 @@ func (t *TokenStream) Get(index int) *Token {
 }
 
 func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
-	var bracersCount int = 0
-	var currenPosition int = startBracer
+	bracketsCount := 0
+	currenPosition := startBracer
 
 	for {
 		value := t.Get(currenPosition)
@@ -40,13 +41,14 @@ func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
 
 		token := *value
 
-		if token.Value == "(" {
-			bracersCount++
-		} else if token.Value == ")" {
-			bracersCount--
+		switch token.Value {
+		case "(":
+			bracketsCount++
+		case ")":
+			bracketsCount--
 		}
 
-		if bracersCount == 0 {
+		if bracketsCount == 0 {
 			return currenPosition
 		}
 
@@ -67,15 +69,13 @@ func (t *TokenStream) NextTokenIsBracer(position int) bool {
 }
 
 func (t *TokenStream) String() string {
-	var output string = ""
+	output := ""
 
-	for i := range t.Tokens {
-		var value Token = *t.Tokens[i]
-
-		output = fmt.Sprintf("%s\n	%s", output, value.String())
+	for _, token := range t.Tokens {
+		output = fmt.Sprintf("%s\n	%s", output, token.String())
 	}
 
-	output = strings.TrimLeft(output, ",  \n")
+	output = strings.TrimLeft(output, ", \n")
 
 	return fmt.Sprintf("[\n%s\n]", output)
 }

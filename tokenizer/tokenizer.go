@@ -2,13 +2,15 @@ package tokenizer
 
 import (
 	"strings"
+
+	"expression_parser/utility"
 )
 
 var (
 	operations   = map[string]bool{"-": true, "+": true, "/": true, "*": true, ".": true, ">": true, "<": true, "=": true}
-	bracers      = map[string]bool{"(": true, ")": true}
+	brackets     = map[string]bool{"(": true, ")": true}
 	numbers      = "0123456789"
-	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$#"
+	wordChars    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$#:"
 	singleTokens = map[int]bool{TypeSemicolon: true, TypeBrackets: true, TypeOperation: true}
 )
 
@@ -17,7 +19,6 @@ type Tokenizer struct {
 	Value           string
 	Stream          TokenStream
 	CurrentPosition int
-	Expression      string
 }
 
 func New() *Tokenizer {
@@ -27,8 +28,8 @@ func New() *Tokenizer {
 func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error) {
 	t.setExpression(expression)
 
-	for i := 0; i < len(t.Expression); i++ {
-		char := string((t.Expression)[i])
+	for i := 0; i < len(t.Stream.Expression); i++ {
+		char := string((t.Stream.Expression)[i])
 		t.CurrentPosition = i
 
 		if char == `"` {
@@ -44,17 +45,19 @@ func (t *Tokenizer) ExpressionToStream(expression *string) (*TokenStream, error)
 			t.changeTokenType(TypeEmpty)
 			continue
 		} else if strings.Contains(numbers, char) {
-			t.changeTokenType(TypeNumber)
+			if t.LastType != TypeWord {
+				t.changeTokenType(TypeNumber)
+			}
 		} else if operations[char] {
 			t.changeTokenType(TypeOperation)
 		} else if char == "," {
 			t.changeTokenType(TypeSemicolon)
-		} else if bracers[char] {
+		} else if brackets[char] {
 			t.changeTokenType(TypeBrackets)
 		} else if strings.Contains(wordChars, char) {
 			t.changeTokenType(TypeWord)
 		} else {
-			return nil, &TokenizeError{Position: i, Expression: t.Expression}
+			return nil, utility.NewError(i, t.Stream.Expression, "tokenize error")
 		}
 
 		t.Value = t.Value + char
@@ -78,10 +81,6 @@ func (t *Tokenizer) changeTokenType(newType int) {
 	t.LastType = newType
 }
 
-func (t *Tokenizer) swapTokenType(newType int) {
-	t.LastType = newType
-}
-
 func (t *Tokenizer) setExpression(expression *string) {
 	if expression == nil {
 		return
@@ -91,5 +90,5 @@ func (t *Tokenizer) setExpression(expression *string) {
 	e = strings.TrimSpace(*expression)
 	e = strings.ReplaceAll(e, "\r", "")
 
-	t.Expression = e
+	t.Stream.Expression = e
 }
