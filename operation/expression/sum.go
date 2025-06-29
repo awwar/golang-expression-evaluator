@@ -28,7 +28,7 @@ func (s *Sum) Execute(argc int, stack *utility.Stack[program.Value]) error {
 			continue
 		}
 
-		result, err = operand.Add(result)
+		result, err = program.Add(operand, result)
 		if err != nil {
 			return err
 		}

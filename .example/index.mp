@@ -10,7 +10,7 @@ IF ($FLIP_COIN_RESULT) (#MORE, #LESS)
 
 PRINT ("Try Next?")
 
-RETURN (void())
+RETURN (void(0))
 
 #MORE
 PRINT ("you're WIN!")

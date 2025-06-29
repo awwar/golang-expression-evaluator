@@ -9,37 +9,21 @@ import (
 )
 
 func init() {
-	operation.AppendExpression("+", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Add(b) },
-	})
+	operation.AppendExpression("+", &BinaryValueOperation{Op: program.Add})
 
-	operation.AppendExpression("-", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Subtract(b) },
-	})
+	operation.AppendExpression("-", &BinaryValueOperation{Op: program.Subtract})
 
-	operation.AppendExpression("/", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Divide(b) },
-	})
+	operation.AppendExpression("/", &BinaryValueOperation{Op: program.Divide})
 
-	operation.AppendExpression("*", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Multiply(b) },
-	})
+	operation.AppendExpression("*", &BinaryValueOperation{Op: program.Multiply})
 
-	operation.AppendExpression("^", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Multiply(b) },
-	})
+	operation.AppendExpression("^", &BinaryValueOperation{Op: program.Power})
 
-	operation.AppendExpression("=", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Eq(b) },
-	})
+	operation.AppendExpression("=", &BinaryValueOperation{Op: program.Eq})
 
-	operation.AppendExpression("<", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.Less(b) },
-	})
+	operation.AppendExpression("<", &BinaryValueOperation{Op: program.Less})
 
-	operation.AppendExpression(">", &BinaryValueOperation{
-		Op: func(a, b program.Value) (program.Value, error) { return a.More(b) },
-	})
+	operation.AppendExpression(">", &BinaryValueOperation{Op: program.More})
 }
 
 type BinaryValueOperation struct {

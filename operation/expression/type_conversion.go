@@ -2,7 +2,6 @@ package expression
 
 import (
 	"errors"
-	"fmt"
 
 	"expression_parser/operation"
 	"expression_parser/program"
@@ -23,7 +22,7 @@ func init() {
 	})
 
 	operation.AppendExpression("void", &TypeConversion{
-		Op: func(a program.Value) (program.Value, error) { return nil, fmt.Errorf("void is not supported yet") },
+		Op: func(a program.Value) (program.Value, error) { return program.NewInteger(0), nil },
 	})
 }
 
@@ -33,12 +32,8 @@ type TypeConversion struct {
 }
 
 func (s *TypeConversion) Execute(argc int, stack *utility.Stack[program.Value]) error {
-	if argc == 0 {
-		return nil
-	}
-
 	if argc != 1 {
-		return errors.New("sigil add: wrong number of arguments")
+		return errors.New("wrong number of arguments")
 	}
 
 	firstOperand, err := stack.Pop()

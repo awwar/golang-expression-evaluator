@@ -169,7 +169,7 @@ func createNegativeNode(operationNode *Node, operandNode *Node) (*Node, error) {
 		minusValue := int64(-1)
 		value := program.NewInteger(minusValue)
 
-		multipliedValue, err := operandNode.Value.Multiply(value)
+		multipliedValue, err := program.Multiply(operandNode.Value, value)
 
 		if err != nil {
 			return nil, fmt.Errorf("negation value error: %s", err)
