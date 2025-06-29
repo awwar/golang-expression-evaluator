@@ -53,7 +53,7 @@ func ValueNegation(list TransformableNodeList) (bool, error) {
 
 	isAllowedLeftBound := leftLeftNode == nil || leftLeftNode.IsMathematicalOperation()
 
-	if !(currentNode.IsNegatable() && leftNode.IsMinusOrPlus() && isAllowedLeftBound) {
+	if !currentNode.IsNegatable() || !leftNode.IsMinusOrPlus() || !isAllowedLeftBound {
 		return false, nil
 	}
 

@@ -16,6 +16,8 @@ import (
 )
 
 func main() {
+	virtual_machine.Debug = true
+
 	input := string(utility.Must(os.ReadFile(".example/index.mp")))
 
 	//fmt.Println(input)

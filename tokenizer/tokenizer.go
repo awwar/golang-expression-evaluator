@@ -81,10 +81,6 @@ func (t *Tokenizer) changeTokenType(newType int) {
 	t.LastType = newType
 }
 
-func (t *Tokenizer) swapTokenType(newType int) {
-	t.LastType = newType
-}
-
 func (t *Tokenizer) setExpression(expression *string) {
 	if expression == nil {
 		return

@@ -18,8 +18,6 @@ const (
 type NodeValueType int
 
 var emptyFloat = NewFloat(0.0).(*FloatValue)
-var emptyString = NewString("").(*StringValue)
-var emptyBoolean = NewBoolean(false).(*BooleanValue)
 var emptyInteger = NewInteger(0).(*IntValue)
 
 func IsVariable(v Value) bool {
@@ -66,7 +64,7 @@ func (v *StringValue) ToBoolean() (*BooleanValue, error) {
 	return NewBoolean(len(*v) > 0).(*BooleanValue), nil
 }
 func (v *StringValue) ToString() (*StringValue, error) {
-	return &(*v), nil
+	return v, nil
 }
 
 type FloatValue float64
@@ -82,7 +80,7 @@ func (v *FloatValue) ToInteger() (*IntValue, error) {
 	return NewInteger(int64(*v)).(*IntValue), nil
 }
 func (v *FloatValue) ToFloat() (*FloatValue, error) {
-	return &(*v), nil
+	return v, nil
 }
 func (v *FloatValue) ToBoolean() (*BooleanValue, error) {
 	return NewBoolean(*v > 0).(*BooleanValue), nil
@@ -101,7 +99,7 @@ func (v *IntValue) TypeName() string {
 	return IntegerType
 }
 func (v *IntValue) ToInteger() (*IntValue, error) {
-	return &(*v), nil
+	return v, nil
 }
 func (v *IntValue) ToFloat() (*FloatValue, error) {
 	return NewFloat(float64(*v)).(*FloatValue), nil
@@ -116,7 +114,7 @@ func (v *IntValue) ToString() (*StringValue, error) {
 type BooleanValue bool
 
 func (v *BooleanValue) String() string {
-	if *v == true {
+	if *v {
 		return "true"
 	}
 	return "false"
@@ -140,7 +138,7 @@ func (v *BooleanValue) ToFloat() (*FloatValue, error) {
 	return NewFloat(val).(*FloatValue), nil
 }
 func (v *BooleanValue) ToBoolean() (*BooleanValue, error) {
-	return &(*v), nil
+	return v, nil
 }
 func (v *BooleanValue) ToString() (*StringValue, error) {
 	return NewString(v.String()).(*StringValue), nil

@@ -8,6 +8,8 @@ import (
 	"expression_parser/virtual_machine/operation"
 )
 
+var Debug = false
+
 func Execute(pr *program.Program) error {
 	stack := utility.NewStack[program.Value]()
 	memo := map[string]program.Value{}
@@ -45,12 +47,13 @@ func Execute(pr *program.Program) error {
 }
 
 func debug(op *program.Operation, stack *utility.Stack[program.Value], pr *program.Program) {
-	fmt.Println(
-		fmt.Sprintf(
-			"> %s %s %s",
-			op.String(),
-			stack.ToString(func(v program.Value) string { return v.String() }),
-			pr.StringStatement(),
-		),
+	if !Debug {
+		return
+	}
+	fmt.Printf(
+		"> %s %s %s\n",
+		op.String(),
+		stack.ToString(func(v program.Value) string { return v.String() }),
+		pr.StringStatement(),
 	)
 }

@@ -41,9 +41,10 @@ func (t *TokenStream) SearchIdxOfClosedBracer(startBracer int) int {
 
 		token := *value
 
-		if token.Value == "(" {
+		switch token.Value {
+		case "(":
 			bracketsCount++
-		} else if token.Value == ")" {
+		case ")":
 			bracketsCount--
 		}
 
@@ -74,7 +75,7 @@ func (t *TokenStream) String() string {
 		output = fmt.Sprintf("%s\n	%s", output, token.String())
 	}
 
-	output = strings.TrimLeft(output, ",  \n")
+	output = strings.TrimLeft(output, ", \n")
 
 	return fmt.Sprintf("[\n%s\n]", output)
 }

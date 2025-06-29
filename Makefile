@@ -4,3 +4,6 @@ lint_setup:
 
 fmt:
 	golangci-lint fmt
+
+fix:
+	golangci-lint run --fix
