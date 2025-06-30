@@ -1,5 +1,3 @@
-# golang-expression-evaluator
-
 ## Program:
 
 ```bash
